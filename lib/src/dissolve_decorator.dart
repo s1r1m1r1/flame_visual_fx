@@ -42,11 +42,15 @@ class DissolveDecorator extends Decorator {
 
     _time += dt;
 
-    // Loop the animation
-    if (_time > duration + 0.5) {
+    // Optional: Stop at end of duration if not looping
+    if (!loop && _time >= duration) {
+      _time = duration;
+    } else if (loop && _time > duration + 0.5) {
       _time = 0.0; // Reset after a small pause
     }
   }
+
+  bool loop = true;
 
   @override
   void apply(void Function(Canvas) draw, Canvas canvas) {
