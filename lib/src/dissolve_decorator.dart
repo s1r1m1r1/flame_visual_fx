@@ -55,6 +55,8 @@ class DissolveDecorator extends Decorator {
       return;
     }
 
+    _initNoise(); // Ensure noise generation is safely bootstrapped even if apply() runs before update()
+
     final size = component.size;
     if (size.x <= 0 || size.y <= 0) {
       draw(canvas);
