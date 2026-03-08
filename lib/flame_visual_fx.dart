@@ -25,3 +25,4 @@ export 'src/decorators/polygon_whirl_decorator.dart';
 export 'src/effects/hue_effect.dart';
 export 'src/effects/flash_effect.dart';
 export 'src/effects/color_filter_effect.dart';
+export 'src/effects/neon_glow_effect.dart';

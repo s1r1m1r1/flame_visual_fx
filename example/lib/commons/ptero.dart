@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flame/components.dart';
 import 'package:flame/game.dart';
 import 'package:flame_visual_fx/flame_visual_fx.dart';
@@ -89,6 +90,27 @@ class Ptero<T extends FlameGame> extends SpriteAnimationComponent
         outline.cacheKey = 'ptero_outline_${size.x}_${size.y}_$currentIndex';
       }
     }
+
+    final neon = dec.find<NeonGlowDecorator>();
+    if (neon != null) {
+      final gameTime = game.currentTime();
+      // Synchronized pulse across all Pteros for massive cache hits
+      const double baseRadius = 8.0;
+      const double amplitude = 4.0;
+      const double speed = 6.0;
+      neon.radius = baseRadius + math.sin(gameTime * speed) * amplitude;
+
+      final currentIndex = animationTicker?.currentIndex;
+      if (currentIndex != null) {
+        neon.cacheKey = 'ptero_neon_${size.x}_${size.y}_$currentIndex';
+      }
+    }
+
+    final hueDec = dec.find<HueDecorator>();
+    if (hueDec != null) {
+      hueDec.hue = (game.currentTime() * 2) % (2 * math.pi);
+    }
+
     dec.find<PolygonOutlineDecorator>()?.vertices = vertices;
     dec.find<PolygonAuraDecorator>()?.vertices = vertices;
     dec.find<PolygonSnakeDecorator>()?.vertices = vertices;

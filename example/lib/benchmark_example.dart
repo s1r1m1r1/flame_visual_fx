@@ -75,6 +75,12 @@ class VisualFXBenchmark extends FlameGame {
               duration: 1.0,
               isActive: true,
             )..flash())),
+    MapEntry(
+        'Neon Glow Decorator',
+        (Ptero p) => p.decorator.addLast(NeonGlowDecorator(
+              component: p,
+              radius: 8,
+            ))),
   ];
 
   String get currentEffectName => effects[_currentEffectIndex].key;

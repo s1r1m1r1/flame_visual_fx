@@ -83,6 +83,12 @@ class OutlineDecorator extends Decorator {
         draw(canvas);
         return;
       }
+
+      // --- JANK SUPPRESSOR ---
+      if (_pendingBakes.contains(effectiveKey)) {
+        draw(canvas);
+        return;
+      }
     }
 
     // --- FAST PATH: Polygon-based Outline ---

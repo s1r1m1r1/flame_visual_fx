@@ -1,9 +1,8 @@
 import 'dart:math' as math;
-import 'dart:ui';
+import 'dart:ui' as ui;
 
 import 'package:flame/components.dart';
 import 'package:flame/rendering.dart';
-import 'package:flutter/material.dart';
 
 /// A [Decorator] that shifts the hue of the component.
 /// The [hue] value is in radians.
@@ -29,7 +28,7 @@ class HueDecorator extends Decorator {
   }
 
   @override
-  void apply(void Function(Canvas) draw, Canvas canvas) {
+  void apply(void Function(ui.Canvas) draw, ui.Canvas canvas) {
     if (!isActive || hue == 0.0) {
       draw(canvas);
       return;
@@ -66,7 +65,7 @@ class HueDecorator extends Decorator {
     // Use null bounds to avoid clipping, as hue shift doesn't change geometry
     canvas.saveLayer(
       null,
-      Paint()..colorFilter = ColorFilter.matrix(matrix),
+      ui.Paint()..colorFilter = ui.ColorFilter.matrix(matrix),
     );
 
     draw(canvas);

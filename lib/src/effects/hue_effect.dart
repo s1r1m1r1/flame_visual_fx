@@ -1,5 +1,5 @@
 import 'dart:math' as math;
-import 'dart:ui';
+import 'dart:ui' as ui;
 import 'package:flame/effects.dart';
 
 /// An effect that shifts the hue of a component by modifying its paint's
@@ -22,13 +22,15 @@ class FastHueEffect extends Effect with EffectTarget<PaintProvider> {
   }
 
   void _applyHue(double h) {
-    if (h == 0.0) {
+    // Round to very small value if near zero to avoid matrix issues
+    final double angle = h.abs() < 0.001 ? 0.0 : h;
+    if (angle == 0.0) {
       target.paint.colorFilter = null;
       return;
     }
 
-    final cosT = math.cos(h);
-    final sinT = math.sin(h);
+    final cosT = math.cos(angle);
+    final sinT = math.sin(angle);
 
     final matrix = <double>[
       0.213 + 0.787 * cosT - 0.213 * sinT,
@@ -53,7 +55,7 @@ class FastHueEffect extends Effect with EffectTarget<PaintProvider> {
       0,
     ];
 
-    target.paint.colorFilter = ColorFilter.matrix(matrix);
+    target.paint.colorFilter = ui.ColorFilter.matrix(matrix);
   }
 
   @override

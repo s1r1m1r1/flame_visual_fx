@@ -1,5 +1,5 @@
 import 'dart:math' as math;
-import 'dart:ui';
+import 'dart:ui' as ui;
 
 import 'package:flame/components.dart';
 import 'package:flame/rendering.dart';
@@ -50,12 +50,8 @@ class WaveDecorator extends Decorator {
   /// Whether the effect is currently active.
   bool isActive;
 
-  void update(double dt) {
-    super.update(dt);
-  }
-
   @override
-  void apply(void Function(Canvas) draw, Canvas canvas) {
+  void apply(void Function(ui.Canvas) draw, ui.Canvas canvas) {
     if (!isActive || amplitude == 0) {
       draw(canvas);
       return;
@@ -66,12 +62,6 @@ class WaveDecorator extends Decorator {
       draw(canvas);
       return;
     }
-
-    // Determine the number of strips based on the axis.
-    // If axis is horizontal, we displacement X based on Y coordinate (vertical strips).
-    // Wait, usually "wave" means if it's a vertical flag, it waves horizontally.
-    // So if axis is horizontal, we move X. The wave phase depends on Y.
-    // If axis is vertical, we move Y. The wave phase depends on X.
 
     final isHorizontal = axis == WaveAxis.horizontal;
     final totalDimension = isHorizontal ? size.y : size.x;
@@ -89,10 +79,10 @@ class WaveDecorator extends Decorator {
 
       // Clip to the current strip
       if (isHorizontal) {
-        canvas.clipRect(Rect.fromLTRB(0, start, size.x, end));
+        canvas.clipRect(ui.Rect.fromLTRB(0, start, size.x, end));
         canvas.translate(displacement, 0);
       } else {
-        canvas.clipRect(Rect.fromLTRB(start, 0, end, size.y));
+        canvas.clipRect(ui.Rect.fromLTRB(start, 0, end, size.y));
         canvas.translate(0, displacement);
       }
 
