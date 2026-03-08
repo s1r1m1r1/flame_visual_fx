@@ -1,5 +1,4 @@
 import 'dart:collection';
-import 'dart:math' as math;
 import 'dart:ui';
 import 'package:flame/components.dart';
 import 'package:flame/rendering.dart';
@@ -12,32 +11,22 @@ class GhostTrailDecorator extends Decorator {
     required this.component,
     this.color = const Color.fromARGB(255, 114, 0, 255), // Purple ghost
     this.trailLength = 5,
-    this.trailDelay = 0.05, // Record a ghost every 0.05 seconds
-    this.isVisible = true,
     this.isActive = true,
-    this.angle = 0.0, // Direction of drift in radians
-    this.speed = 0.0, // Speed of drift in pixels per second
-    this.loop = true,
   });
 
   final PositionComponent component;
   Color color;
   int trailLength;
-  double trailDelay;
-  bool isVisible;
   bool isActive;
-  double angle;
-  double speed;
-  bool loop;
 
   final Queue<_GhostSnapshot> _ghosts = Queue();
-  double _timeSinceLastSnapshot = 0.0;
 
   // We need to track where the component was relative to the canvas origin.
   // The simplest way without un-projecting Flame matrices is to track its local logical position!
   Vector2 _lastKnownPosition = Vector2.zero();
 
   void update(double dt) {
+    super.update(dt);
     if (!isActive) {
       _ghosts.clear();
       return;
@@ -45,22 +34,9 @@ class GhostTrailDecorator extends Decorator {
 
     final currentPosition = component.absolutePosition;
 
-    // If we have drift speed, we "push" the ghosts away from the component
-    // proportionally to their age, or simply move recorded positions!
-    if (speed > 0) {
-      final driftX = math.cos(angle) * speed * dt;
-      final driftY = math.sin(angle) * speed * dt;
-      for (final ghost in _ghosts) {
-        ghost.position.translate(-driftX, -driftY);
-      }
-    }
-
-    _lastKnownPosition.setFrom(currentPosition);
-    _timeSinceLastSnapshot += dt;
-
-    if (_timeSinceLastSnapshot >= trailDelay) {
-      _timeSinceLastSnapshot = 0.0;
-      _ghosts.addFirst(_GhostSnapshot(position: _lastKnownPosition.clone()));
+    if (currentPosition != _lastKnownPosition) {
+      _ghosts.addFirst(_GhostSnapshot(position: currentPosition.clone()));
+      _lastKnownPosition.setFrom(currentPosition);
 
       if (_ghosts.length > trailLength) {
         _ghosts.removeLast();
@@ -88,7 +64,7 @@ class GhostTrailDecorator extends Decorator {
 
       final ghostPaint = Paint()
         ..colorFilter = ColorFilter.mode(
-          color.withOpacity(opacity * 0.5), // Max 50% opacity
+          color.withValues(alpha: opacity * 0.5), // Max 50% opacity
           BlendMode.srcIn,
         );
 

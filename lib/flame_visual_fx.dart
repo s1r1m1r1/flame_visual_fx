@@ -2,11 +2,26 @@
 /// outlines, neon glows, halos, holograms, and dissolve animations.
 library flame_visual_fx;
 
-export 'src/dissolve_decorator.dart';
-export 'src/ghost_trail_decorator.dart';
-export 'src/hologram_decorator.dart';
-export 'src/neon_glow_decorator.dart';
-export 'src/outline_decorator.dart';
-export 'src/pulse_outline_decorator.dart';
-export 'src/damage_flash_decorator.dart';
-export 'src/hue_decorator.dart';
+export 'src/decorators/dissolve_decorator.dart';
+export 'src/decorators/ghost_trail_decorator.dart';
+export 'src/decorators/hologram_decorator.dart';
+export 'src/decorators/neon_glow_decorator.dart';
+export 'src/decorators/outline_decorator.dart';
+export 'src/decorators/pulse_outline_decorator.dart';
+export 'src/decorators/damage_flash_decorator.dart';
+export 'src/decorators/hue_decorator.dart';
+export 'src/decorators/wave_decorator.dart';
+export 'src/decorators/polygon_outline_decorator.dart';
+export 'src/contour_finder.dart';
+export 'src/decorators/polygon_aura_decorator.dart';
+export 'src/decorators/polygon_snake_decorator.dart';
+export 'src/decorators/polygon_echo_decorator.dart';
+export 'src/decorators/polygon_scan_decorator.dart';
+export 'src/decorators/polygon_particle_decorator.dart';
+export 'src/decorators/polygon_shield_decorator.dart';
+export 'src/decorators/polygon_arc_decorator.dart';
+export 'src/decorators/polygon_fire_decorator.dart';
+export 'src/decorators/polygon_whirl_decorator.dart';
+export 'src/effects/hue_effect.dart';
+export 'src/effects/flash_effect.dart';
+export 'src/effects/color_filter_effect.dart';

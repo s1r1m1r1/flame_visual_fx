@@ -1,4 +1,3 @@
-import 'dart:math' as math;
 import 'dart:ui';
 import 'package:flame/components.dart';
 import 'package:flame/rendering.dart';
@@ -9,31 +8,20 @@ import 'package:flame/rendering.dart';
 class HologramDecorator extends Decorator {
   HologramDecorator({
     required this.component,
-    this.glitchIntensity = 3.0,
-    this.jitterFrequency =
-        0.2, // Probability of a vertical glitch jump each frame
+    this.intensity = 3.0,
+    this.splitOffset = 0.0,
+    this.jitterY = 0.0,
     this.isActive = true,
   });
 
   final PositionComponent component;
-  double glitchIntensity;
-  double jitterFrequency;
+  double intensity;
+  double splitOffset;
+  double jitterY;
   bool isActive;
 
-  double _time = 0.0;
-  final math.Random _random = math.Random();
-  double _currentJitterY = 0.0;
-
   void update(double dt) {
-    if (!isActive) return;
-    _time += dt;
-
-    // Random vertical glitching (static jitter)
-    if (_random.nextDouble() < jitterFrequency) {
-      _currentJitterY = (_random.nextDouble() * 4.0) - 2.0; // -2 to +2 pixels
-    } else {
-      _currentJitterY = 0.0;
-    }
+    super.update(dt);
   }
 
   @override
@@ -49,9 +37,8 @@ class HologramDecorator extends Decorator {
       return;
     }
 
-    // Calculate shifting x-offset based on time. We use a fast jagged sine wave to make it look "digital"
-    final splitX = math.sin(_time * 15.0) * glitchIntensity +
-        math.cos(_time * 25.0) * (glitchIntensity * 0.5);
+    // Use static offsets
+    final splitX = splitOffset;
 
     // 1. Draw CYAN channel shifted left
     final cyanPaint = Paint()
@@ -61,7 +48,7 @@ class HologramDecorator extends Decorator {
       );
 
     canvas.save();
-    canvas.translate(-splitX, _currentJitterY);
+    canvas.translate(-splitX, jitterY);
     canvas.saveLayer(null, cyanPaint);
     draw(canvas);
     canvas.restore(); // resolve saveLayer
@@ -75,7 +62,7 @@ class HologramDecorator extends Decorator {
       );
 
     canvas.save();
-    canvas.translate(splitX, -_currentJitterY * 0.5); // counter jitter
+    canvas.translate(splitX, -jitterY * 0.5); // counter jitter
     canvas.saveLayer(null, magentaPaint);
     draw(canvas);
     canvas.restore();

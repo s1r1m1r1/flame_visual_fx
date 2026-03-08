@@ -26,6 +26,7 @@ class NeonGlowDecorator extends Decorator {
   double _time = 0.0;
 
   void update(double dt) {
+    super.update(dt);
     if (!isActive) return;
     _time += dt;
   }

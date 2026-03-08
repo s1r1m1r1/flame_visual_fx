@@ -52,10 +52,9 @@ packages:
   flame:
     dependency: "direct main"
     description:
-      name: flame
-      sha256: "78c87c34d512f5dd5b69bda823bf31a9f53b27cf319b5326b788f0ec93cbd0b3"
-      url: "https://pub.dev"
-    source: hosted
+      path: "../../../flame/packages/flame"
+      relative: true
+    source: path
     version: "1.36.0"
   flame_visual_fx:
     dependency: "direct main"
@@ -224,5 +223,5 @@ packages:
     source: hosted
     version: "15.0.2"
 sdks:
-  dart: ">=3.11.0 <4.0.0"
-  flutter: ">=3.41.0"
+  dart: ">=3.9.0-0 <4.0.0"
+  flutter: ">=3.18.0-18.0.pre.54"

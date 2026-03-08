@@ -9,24 +9,23 @@ import 'package:flame/rendering.dart';
 class DissolveDecorator extends Decorator {
   DissolveDecorator({
     required this.component,
-    this.duration = 2.0, // Seconds to fully dissolve
     this.isActive = true,
     this.gridSize = 25,
-    this.loop = true,
     this.showResidualEffect = false,
+    this.progress = 0.0,
   });
 
   final PositionComponent component;
-  double duration;
   bool isActive;
   int gridSize;
-  bool loop;
 
   /// If true, a faint "residual" silhouette might remain after dissolution.
   /// If false (default), the component is completely hidden at the end of duration.
   bool showResidualEffect;
 
-  double _time = 0.0;
+  /// Current progress of the dissolve effect (0.0 to 1.0).
+  double progress;
+
   final math.Random _random = math.Random();
 
   // A pre-calculated grid of random noise values to act as our "mask texture"
@@ -44,22 +43,13 @@ class DissolveDecorator extends Decorator {
 
   /// Resets the dissolve effect to the beginning
   void reset() {
-    _time = 0.0;
+    progress = 0.0;
   }
 
   void update(double dt) {
+    super.update(dt);
     if (!isActive) return;
-
     _initNoise();
-
-    _time += dt;
-
-    // Optional: Stop at end of duration if not looping
-    if (!loop && _time >= duration) {
-      _time = duration;
-    } else if (loop && _time > duration + 0.5) {
-      _time = 0.0; // Reset after a small pause
-    }
   }
 
   @override
@@ -78,10 +68,10 @@ class DissolveDecorator extends Decorator {
     }
 
     // Calculate how far the dissolve has progressed (0.0 to 1.0)
-    final progress = (_time / duration).clamp(0.0, 1.0);
+    final currentProgress = progress.clamp(0.0, 1.0);
 
     // If we want a clean finish and we've reached the end, just stop drawing
-    if (progress >= 1.0 && !showResidualEffect) {
+    if (currentProgress >= 1.0 && !showResidualEffect) {
       return;
     }
 
@@ -110,7 +100,7 @@ class DissolveDecorator extends Decorator {
         final noiseValue = _noiseGrid![y * gridSize + x];
 
         // Logic: if progress >= the threshold, erase this cell.
-        if (progress >= (normalizedY * 0.7 + noiseValue * 0.3)) {
+        if (currentProgress >= (normalizedY * 0.7 + noiseValue * 0.3)) {
           canvas.drawRect(
             Rect.fromLTWH(
               x * cellWidth,

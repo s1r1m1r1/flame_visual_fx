@@ -14,6 +14,10 @@ dependencies:
   flame_visual_fx:
     path: ../
 
+dependency_overrides:
+  flame:
+    path: ../../../flame/packages/flame
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

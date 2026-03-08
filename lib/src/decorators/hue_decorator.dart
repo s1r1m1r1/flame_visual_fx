@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 
 /// A [Decorator] that shifts the hue of the component.
 /// The [hue] value is in radians.
+@Deprecated('Use HueEffect from Flame instead. Will be removed in version 2.0')
 class HueDecorator extends Decorator {
   HueDecorator({
     required this.component,
@@ -20,7 +21,12 @@ class HueDecorator extends Decorator {
   /// The hue shift in radians.
   /// Standard range is from -pi to pi, or 0 to 2*pi.
   double hue;
+
   bool isActive;
+
+  void update(double dt) {
+    super.update(dt);
+  }
 
   @override
   void apply(void Function(Canvas) draw, Canvas canvas) {

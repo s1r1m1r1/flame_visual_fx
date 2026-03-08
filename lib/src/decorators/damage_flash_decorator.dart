@@ -25,6 +25,7 @@ class DamageFlashDecorator extends Decorator {
   }
 
   void update(double dt) {
+    super.update(dt);
     if (!_flashing) return;
 
     _timer += dt;
