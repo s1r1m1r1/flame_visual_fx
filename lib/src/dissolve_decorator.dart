@@ -13,6 +13,7 @@ class DissolveDecorator extends Decorator {
     this.isActive = true,
     this.gridSize = 25,
     this.loop = true,
+    this.showResidualEffect = false,
   });
 
   final PositionComponent component;
@@ -20,6 +21,10 @@ class DissolveDecorator extends Decorator {
   bool isActive;
   int gridSize;
   bool loop;
+
+  /// If true, a faint "residual" silhouette might remain after dissolution.
+  /// If false (default), the component is completely hidden at the end of duration.
+  bool showResidualEffect;
 
   double _time = 0.0;
   final math.Random _random = math.Random();
@@ -74,6 +79,11 @@ class DissolveDecorator extends Decorator {
 
     // Calculate how far the dissolve has progressed (0.0 to 1.0)
     final progress = (_time / duration).clamp(0.0, 1.0);
+
+    // If we want a clean finish and we've reached the end, just stop drawing
+    if (progress >= 1.0 && !showResidualEffect) {
+      return;
+    }
 
     // 1. Save an isolated layer where we will draw the original character FIRST
     canvas.saveLayer(null, Paint());

@@ -22,20 +22,16 @@ class DecoratorExample extends FlameGame {
 
   @override
   Future<void> onLoad() async {
-    final cellWidth = size.x / 3;
-    final cellHeight = size.y / 3;
+    const margin = 64.0;
+    final availableSize = size - Vector2.all(margin * 2);
+    final cellWidth = availableSize.x / 3;
+    final cellHeight = availableSize.y / 3;
 
     final decoratorData = [
       (name: 'Original', factory: (Ptero e) => null, onTap: null),
       (
         name: 'Pulse Outline',
-        factory: (Ptero e) => PulseOutlineDecorator(
-            component: e,
-            baseThickness: 2.0,
-            pulseAmplitude: 4.0,
-            pulseSpeed: 5.0,
-            margin: 0.0,
-            isActive: true),
+        factory: (Ptero e) => PulseOutlineDecorator(component: e),
         onTap: null
       ),
       (
@@ -54,19 +50,23 @@ class DecoratorExample extends FlameGame {
         onTap: null
       ),
       (
-        name: 'Dissolve\n(Tap to cycle grid)',
+        name: 'Dissolve\n(Tap: Grid & Residual)',
         factory: (Ptero e) => DissolveDecorator(component: e)..loop = false,
         onTap: (dec) {
           if (dec is DissolveDecorator) {
-            // Cycle grid size: 10 -> 25 -> 50 -> 100 -> 10
             if (dec.gridSize == 10) {
               dec.gridSize = 25;
-            } else if (dec.gridSize == 25) {
+              dec.showResidualEffect = false;
+            } else if (dec.gridSize == 25 && !dec.showResidualEffect) {
+              dec.showResidualEffect = true;
+            } else if (dec.gridSize == 25 && dec.showResidualEffect) {
               dec.gridSize = 50;
+              dec.showResidualEffect = false;
             } else if (dec.gridSize == 50) {
               dec.gridSize = 100;
             } else {
               dec.gridSize = 10;
+              dec.showResidualEffect = false;
             }
             dec.reset();
           }
@@ -108,7 +108,12 @@ class DecoratorExample extends FlameGame {
     for (var i = 0; i < decoratorData.length; i++) {
       final col = i % 3;
       final row = i ~/ 3;
-      final cellPos = Vector2(col * cellWidth, row * cellHeight);
+
+      // Calculate cell position with 64px margin
+      final cellPos = Vector2(
+        margin + col * cellWidth,
+        margin + row * cellHeight,
+      );
 
       final data = decoratorData[i];
       add(
@@ -137,29 +142,30 @@ class DecoratorCell extends PositionComponent with TapCallbacks {
   final Decorator? Function(Ptero) decoratorFactory;
   final void Function(Decorator)? onTap;
 
-  late final Ptero ember;
+  late final Ptero ptero;
   Decorator? fxDecorator;
 
   @override
   Future<void> onLoad() async {
     final emberHeight = math.min(size.x / 1.5, size.y) * 0.5;
     final emberWidth = emberHeight * 1.5;
+    final pteroPos = Vector2(size.x - emberWidth, size.y - emberHeight) / 2;
 
-    ember = Ptero(
-      position: size / 2, // Centered in cell using Anchor.center
+    ptero = Ptero(
+      position: pteroPos..translate(0, -64),
       size: Vector2(emberWidth, emberHeight),
     );
-    add(ember);
+    add(ptero);
 
-    fxDecorator = decoratorFactory(ember);
+    fxDecorator = decoratorFactory(ptero);
     if (fxDecorator != null) {
-      ember.decorator = fxDecorator!;
+      ptero.decorator = fxDecorator!;
     }
 
     add(
       TextComponent(
         text: name,
-        position: Vector2(size.x / 2, size.y * 0.85),
+        position: Vector2(size.x * 0.2, size.y * 0.85),
         anchor: Anchor.center,
         textRenderer: TextPaint(
           style: const TextStyle(
