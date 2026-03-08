@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 class DamageFlashDecorator extends Decorator {
   DamageFlashDecorator({
     this.color = const Color.fromARGB(255, 255, 0, 0),
-    this.duration = 0.2, // seconds
+    this.duration = 1.0, // seconds
     this.isActive = false,
   });
 

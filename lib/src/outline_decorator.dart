@@ -33,21 +33,13 @@ class OutlineDecorator extends Decorator {
       return;
     }
 
-    // 1. Calculate boundaries for the off-screen buffer
-    final bounds = Rect.fromLTWH(
-      -margin,
-      -margin,
-      size.x + margin * 2,
-      size.y + margin * 2,
-    );
-
     // 2. Setup the tinting color filter
     // BlendMode.srcIn keeps the alpha of the drawn layer, but replaces all RGB with `color`.
     final outlinePaint = Paint()
       ..colorFilter = ColorFilter.mode(color, BlendMode.srcIn);
 
     // Start isolated pass
-    canvas.saveLayer(bounds, outlinePaint);
+    canvas.saveLayer(null, outlinePaint);
 
     // 8-way offset positions for a perfectly solid outline
     final offsets = [

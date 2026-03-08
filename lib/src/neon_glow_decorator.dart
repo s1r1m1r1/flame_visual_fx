@@ -49,13 +49,6 @@ class NeonGlowDecorator extends Decorator {
     // Prevent negative blur radius which causes rendering crashes
     final safeRadius = math.max(0.1, currentRadius);
 
-    final bounds = Rect.fromLTWH(
-      -safeRadius * 2,
-      -safeRadius * 2,
-      size.x + safeRadius * 4,
-      size.y + safeRadius * 4,
-    );
-
     // 1. Setup the neon glow paint
     // We use ImageFilter.blur to soften the rendered pixels, and ColorFilter to make it solid neon!
     final glowPaint = Paint()
@@ -63,7 +56,7 @@ class NeonGlowDecorator extends Decorator {
       ..imageFilter = ImageFilter.blur(sigmaX: safeRadius, sigmaY: safeRadius);
 
     // Render the isolated glowing silhouette behind the character
-    canvas.saveLayer(bounds, glowPaint);
+    canvas.saveLayer(null, glowPaint);
     draw(canvas);
     canvas.restore();
 

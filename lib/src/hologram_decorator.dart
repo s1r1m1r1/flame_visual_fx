@@ -49,16 +49,8 @@ class HologramDecorator extends Decorator {
       return;
     }
 
-    final bounds = Rect.fromLTWH(
-      -glitchIntensity * 2,
-      -glitchIntensity * 2,
-      size.x + glitchIntensity * 4,
-      size.y + glitchIntensity * 4,
-    );
-
     // Calculate shifting x-offset based on time. We use a fast jagged sine wave to make it look "digital"
-    final splitX =
-        math.sin(_time * 15.0) * glitchIntensity +
+    final splitX = math.sin(_time * 15.0) * glitchIntensity +
         math.cos(_time * 25.0) * (glitchIntensity * 0.5);
 
     // 1. Draw CYAN channel shifted left
@@ -70,7 +62,7 @@ class HologramDecorator extends Decorator {
 
     canvas.save();
     canvas.translate(-splitX, _currentJitterY);
-    canvas.saveLayer(bounds, cyanPaint);
+    canvas.saveLayer(null, cyanPaint);
     draw(canvas);
     canvas.restore(); // resolve saveLayer
     canvas.restore(); // resolve translation
@@ -84,7 +76,7 @@ class HologramDecorator extends Decorator {
 
     canvas.save();
     canvas.translate(splitX, -_currentJitterY * 0.5); // counter jitter
-    canvas.saveLayer(bounds, magentaPaint);
+    canvas.saveLayer(null, magentaPaint);
     draw(canvas);
     canvas.restore();
     canvas.restore();
@@ -93,7 +85,7 @@ class HologramDecorator extends Decorator {
     // Using saveLayer here just to apply opacity to the whole component cleanly
     final basePaint = Paint()
       ..color = const Color.fromARGB(180, 255, 255, 255); // 70% opacity
-    canvas.saveLayer(bounds, basePaint);
+    canvas.saveLayer(null, basePaint);
     draw(canvas);
     canvas.restore();
   }

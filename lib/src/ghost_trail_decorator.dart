@@ -1,4 +1,5 @@
 import 'dart:collection';
+import 'dart:math' as math;
 import 'dart:ui';
 import 'package:flame/components.dart';
 import 'package:flame/rendering.dart';
@@ -12,14 +13,22 @@ class GhostTrailDecorator extends Decorator {
     this.color = const Color.fromARGB(255, 114, 0, 255), // Purple ghost
     this.trailLength = 5,
     this.trailDelay = 0.05, // Record a ghost every 0.05 seconds
+    this.isVisible = true,
     this.isActive = true,
+    this.angle = 0.0, // Direction of drift in radians
+    this.speed = 0.0, // Speed of drift in pixels per second
+    this.loop = true,
   });
 
   final PositionComponent component;
   Color color;
   int trailLength;
   double trailDelay;
+  bool isVisible;
   bool isActive;
+  double angle;
+  double speed;
+  bool loop;
 
   final Queue<_GhostSnapshot> _ghosts = Queue();
   double _timeSinceLastSnapshot = 0.0;
@@ -34,12 +43,23 @@ class GhostTrailDecorator extends Decorator {
       return;
     }
 
-    _lastKnownPosition.setFrom(component.absolutePosition);
+    final currentPosition = component.absolutePosition;
+
+    // If we have drift speed, we "push" the ghosts away from the component
+    // proportionally to their age, or simply move recorded positions!
+    if (speed > 0) {
+      final driftX = math.cos(angle) * speed * dt;
+      final driftY = math.sin(angle) * speed * dt;
+      for (final ghost in _ghosts) {
+        ghost.position.translate(-driftX, -driftY);
+      }
+    }
+
+    _lastKnownPosition.setFrom(currentPosition);
     _timeSinceLastSnapshot += dt;
 
     if (_timeSinceLastSnapshot >= trailDelay) {
       _timeSinceLastSnapshot = 0.0;
-
       _ghosts.addFirst(_GhostSnapshot(position: _lastKnownPosition.clone()));
 
       if (_ghosts.length > trailLength) {
@@ -61,10 +81,6 @@ class GhostTrailDecorator extends Decorator {
       return;
     }
 
-    // Capture the current un-decorated frame of the component using saveLayer
-    // By drawing the component off-screen with srcIn, we can grab its silhouette shape
-    final bounds = Rect.fromLTWH(0, 0, size.x, size.y);
-
     int index = 0;
     for (final ghost in _ghosts) {
       // The older the ghost, the more transparent it becomes
@@ -82,7 +98,7 @@ class GhostTrailDecorator extends Decorator {
       final dy = ghost.position.y - component.absolutePosition.y;
 
       canvas.translate(dx, dy);
-      canvas.saveLayer(bounds, ghostPaint);
+      canvas.saveLayer(null, ghostPaint);
       draw(canvas);
       canvas.restore();
       canvas.restore();
