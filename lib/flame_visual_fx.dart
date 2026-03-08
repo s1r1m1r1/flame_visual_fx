@@ -8,3 +8,5 @@ export 'src/hologram_decorator.dart';
 export 'src/neon_glow_decorator.dart';
 export 'src/outline_decorator.dart';
 export 'src/pulse_outline_decorator.dart';
+export 'src/damage_flash_decorator.dart';
+export 'src/hue_decorator.dart';

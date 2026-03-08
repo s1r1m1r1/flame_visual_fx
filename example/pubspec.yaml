@@ -1,0 +1,26 @@
+name: flame_visual_fx_example
+description: An example project demonstrating the use of decorators in flame_visual_fx.
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+  flutter: ">=3.10.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flame: ^1.10.0
+  flame_visual_fx:
+    path: ../
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/animations/ember.png
+    - assets/images/animations/bomb_ptero.png

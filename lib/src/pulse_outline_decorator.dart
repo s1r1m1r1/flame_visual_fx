@@ -47,20 +47,12 @@ class PulseOutlineDecorator extends Decorator {
       return;
     }
 
-    // 1. Calculate boundaries for the off-screen buffer
-    final bounds = Rect.fromLTWH(
-      -margin,
-      -margin,
-      size.x + margin * 2,
-      size.y + margin * 2,
-    );
-
     // 2. Setup the tinting color filter
     final outlinePaint = Paint()
       ..colorFilter = ColorFilter.mode(color, BlendMode.srcIn);
 
     // Start isolated pass
-    canvas.saveLayer(bounds, outlinePaint);
+    canvas.saveLayer(null, outlinePaint);
 
     final int steps = math.max(8, (currentThickness * math.pi).ceil());
     final double stepAngle = (2 * math.pi) / steps;
