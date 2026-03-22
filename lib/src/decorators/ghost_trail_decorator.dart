@@ -26,7 +26,6 @@ class GhostTrailDecorator extends Decorator {
   Vector2 _lastKnownPosition = Vector2.zero();
 
   void update(double dt) {
-    super.update(dt);
     if (!isActive) {
       _ghosts.clear();
       return;
@@ -51,7 +50,7 @@ class GhostTrailDecorator extends Decorator {
       return;
     }
 
-    final size = component.size;
+    final size = this.component.size;
     if (size.x <= 0 || size.y <= 0) {
       draw(canvas);
       return;
@@ -70,8 +69,8 @@ class GhostTrailDecorator extends Decorator {
 
       canvas.save();
       // Calculate relative translation: Current position -> Past Ghost Position
-      final dx = ghost.position.x - component.absolutePosition.x;
-      final dy = ghost.position.y - component.absolutePosition.y;
+      final dx = ghost.position.x - this.component.absolutePosition.x;
+      final dy = ghost.position.y - this.component.absolutePosition.y;
 
       canvas.translate(dx, dy);
       canvas.saveLayer(null, ghostPaint);

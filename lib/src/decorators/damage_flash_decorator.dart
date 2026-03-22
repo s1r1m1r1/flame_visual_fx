@@ -1,3 +1,4 @@
+import "package:flame/components.dart";
 import 'dart:math' as math;
 
 import 'package:flame/rendering.dart';
@@ -9,11 +10,20 @@ class DamageFlashDecorator extends Decorator {
     this.color = const Color.fromARGB(255, 255, 0, 0),
     this.duration = 1.0, // seconds
     this.isActive = false,
+    this.useSaveLayer = true,
   });
 
   Color color;
   double duration;
   bool isActive;
+
+  /// Whether to use `canvas.saveLayer` to apply the flash effect.
+  ///
+  /// If set to `false`, the decorator will attempt to modify the `colorFilter`
+  /// of the component's `Paint` directly. This is significantly faster but
+  /// only works correctly for components that use a single paint to draw
+  /// their content (like `SpriteComponent`).
+  final bool useSaveLayer;
 
   double _timer = 0.0;
   bool _flashing = false;
@@ -25,7 +35,6 @@ class DamageFlashDecorator extends Decorator {
   }
 
   void update(double dt) {
-    super.update(dt);
     if (!_flashing) return;
 
     _timer += dt;
@@ -36,7 +45,8 @@ class DamageFlashDecorator extends Decorator {
   }
 
   @override
-  void apply(void Function(Canvas) draw, Canvas canvas) {
+  void apply(void Function(Canvas) draw, Canvas canvas,
+      [Component? component]) {
     if (!isActive || !_flashing) {
       draw(canvas);
       return;
@@ -47,15 +57,22 @@ class DamageFlashDecorator extends Decorator {
     // Sin curve for smooth flash in and out
     final alpha = (math.sin(progress * math.pi) * 255).clamp(0, 255).toInt();
 
-    final flashColor = color.withAlpha(alpha);
+    final filter = ColorFilter.mode(color.withAlpha(alpha), BlendMode.srcATop);
 
-    canvas.saveLayer(
-      null, // apply to all bounds drawn
-      Paint()..colorFilter = ColorFilter.mode(flashColor, BlendMode.srcATop),
-    );
+    if (!useSaveLayer && component is HasPaint) {
+      final oldFilter = component.paint.colorFilter;
+      component.paint.colorFilter = filter;
+      draw(canvas);
+      component.paint.colorFilter = oldFilter;
+    } else {
+      canvas.saveLayer(
+        null, // apply to all bounds drawn
+        Paint()..colorFilter = filter,
+      );
 
-    draw(canvas);
+      draw(canvas);
 
-    canvas.restore();
+      canvas.restore();
+    }
   }
 }

@@ -1,4 +1,4 @@
-import 'dart:ui';
+import 'dart:ui' as ui;
 
 import 'package:flame/components.dart';
 import 'package:flame/rendering.dart';
@@ -9,7 +9,7 @@ import 'package:meta/meta.dart';
 class PolygonAuraDecorator extends Decorator {
   PolygonAuraDecorator({
     required this.vertices,
-    this.color = const Color(0xFFFF00FF),
+    this.color = const ui.Color(0xFFFF00FF),
     this.baseAmplitude = 5.0,
     this.pulse = 0.5,
     this.blurSigma = 4.0,
@@ -21,7 +21,7 @@ class PolygonAuraDecorator extends Decorator {
   List<Vector2> vertices;
 
   /// Base color of the aura.
-  Color color;
+  ui.Color color;
 
   /// How far the aura expands from the silhouette.
   double baseAmplitude;
@@ -39,17 +39,13 @@ class PolygonAuraDecorator extends Decorator {
   bool isActive;
 
   List<Vector2>? _lastVertices;
-  Path? _cachedPath;
+  ui.Path? _cachedPath;
   Vector2? _cachedCenter;
-  final Paint _auraPaint = Paint();
-  static final Map<int, MaskFilter> _blurCache = {};
-
-  void update(double dt) {
-    super.update(dt);
-  }
+  final ui.Paint _auraPaint = ui.Paint();
+  static final Map<int, ui.MaskFilter> _blurCache = {};
 
   @override
-  void apply(void Function(Canvas) draw, Canvas canvas) {
+  void apply(void Function(ui.Canvas) draw, ui.Canvas canvas, [Component? component]) {
     // 1. Draw the component first
     draw(canvas);
 
@@ -59,7 +55,7 @@ class PolygonAuraDecorator extends Decorator {
 
     if (_lastVertices != vertices) {
       _lastVertices = vertices;
-      _cachedPath = Path();
+      _cachedPath = ui.Path();
       for (int i = 0; i < vertices.length; i++) {
         if (i == 0) {
           _cachedPath!.moveTo(vertices[i].x, vertices[i].y);
@@ -81,12 +77,12 @@ class PolygonAuraDecorator extends Decorator {
       final int quantizedSigmaKey = (sigma * 10).round();
       final blur = _blurCache.putIfAbsent(
         quantizedSigmaKey,
-        () => MaskFilter.blur(BlurStyle.normal, quantizedSigmaKey / 10.0),
+        () => ui.MaskFilter.blur(ui.BlurStyle.normal, quantizedSigmaKey / 10.0),
       );
 
       _auraPaint
         ..color = color.withValues(alpha: layerAlpha)
-        ..style = PaintingStyle.stroke
+        ..style = ui.PaintingStyle.stroke
         ..strokeWidth = i * 2.0
         ..maskFilter = blur;
 

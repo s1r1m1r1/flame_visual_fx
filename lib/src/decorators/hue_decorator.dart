@@ -12,6 +12,7 @@ class HueDecorator extends Decorator {
     required this.component,
     this.hue = 0.0,
     this.isActive = true,
+    this.useSaveLayer = true,
   });
 
   /// The component to which this decorator is applied.
@@ -23,12 +24,22 @@ class HueDecorator extends Decorator {
 
   bool isActive;
 
-  void update(double dt) {
-    super.update(dt);
-  }
+  /// Whether to use `canvas.saveLayer` to apply the hue shift.
+  ///
+  /// If set to `false`, the decorator will attempt to modify the `colorFilter`
+  /// of the component's `Paint` directly. This is significantly faster but
+  /// only works correctly for components that use a single paint to draw
+  /// their content (like `SpriteComponent`).
+  final bool useSaveLayer;
+
+  void update(double dt) {}
 
   @override
-  void apply(void Function(ui.Canvas) draw, ui.Canvas canvas) {
+  void apply(
+    void Function(ui.Canvas) draw,
+    ui.Canvas canvas, [
+    Component? component,
+  ]) {
     if (!isActive || hue == 0.0) {
       draw(canvas);
       return;
@@ -39,7 +50,7 @@ class HueDecorator extends Decorator {
 
     // Standard hue rotation matrix using NTSC luminance weights:
     // R: 0.213, G: 0.715, B: 0.072
-    final matrix = <double>[
+    final matrix = ui.ColorFilter.matrix(<double>[
       0.213 + 0.787 * cosT - 0.213 * sinT,
       0.715 - 0.715 * cosT - 0.715 * sinT,
       0.072 - 0.072 * cosT + 0.928 * sinT,
@@ -60,16 +71,24 @@ class HueDecorator extends Decorator {
       0,
       1,
       0,
-    ];
+    ]);
 
-    // Use null bounds to avoid clipping, as hue shift doesn't change geometry
-    canvas.saveLayer(
-      null,
-      ui.Paint()..colorFilter = ui.ColorFilter.matrix(matrix),
-    );
+    final comp = component ?? this.component;
+    if (!useSaveLayer && comp is HasPaint) {
+      final oldFilter = comp.paint.colorFilter;
+      comp.paint.colorFilter = matrix;
+      draw(canvas);
+      comp.paint.colorFilter = oldFilter;
+    } else {
+      // Use null bounds to avoid clipping, as hue shift doesn't change geometry
+      canvas.saveLayer(
+        null,
+        ui.Paint()..colorFilter = matrix,
+      );
 
-    draw(canvas);
+      draw(canvas);
 
-    canvas.restore();
+      canvas.restore();
+    }
   }
 }

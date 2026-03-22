@@ -57,12 +57,16 @@ class VisualFXBenchmark extends FlameGame {
             .addLast(PolygonScanDecorator(vertices: p.contourVertices ?? []))),
     MapEntry(
         'Fire Decorator',
-        (Ptero p) => p.decorator
-            .addLast(PolygonFireDecorator(vertices: p.contourVertices ?? []))),
+        (Ptero p) => p.decorator.addLast(PolygonFireDecorator(
+              vertices: p.contourVertices ?? [],
+              particles: [], // Managed by Ptero
+            ))),
     MapEntry(
         'Whirl Decorator',
-        (Ptero p) => p.decorator
-            .addLast(PolygonWhirlDecorator(vertices: p.contourVertices ?? []))),
+        (Ptero p) => p.decorator.addLast(PolygonWhirlDecorator(
+              vertices: p.contourVertices ?? [],
+              particles: [], // Managed by Ptero
+            ))),
     MapEntry(
         'Hue Decorator',
         (Ptero p) => p.decorator.addLast(HueDecorator(
@@ -80,6 +84,19 @@ class VisualFXBenchmark extends FlameGame {
         (Ptero p) => p.decorator.addLast(NeonGlowDecorator(
               component: p,
               radius: 8,
+            ))),
+    MapEntry(
+        'Arc Decorator',
+        (Ptero p) => p.decorator.addLast(PolygonArcDecorator(
+              vertices: p.contourVertices ?? [],
+              activeArcs: [], // Managed by Ptero
+              contactPoints: [], // Managed by Ptero
+            ))),
+    MapEntry(
+        'Particle Decorator',
+        (Ptero p) => p.decorator.addLast(PolygonParticleDecorator(
+              vertices: p.contourVertices ?? [],
+              particles: [], // Managed by Ptero
             ))),
   ];
 

@@ -1,24 +1,23 @@
 name: flame_visual_fx
+resolution: workspace
 description: A collection of high-performance, cross-platform Canvas-based Decorators for Flame engine (Outlines, Neon Glows, Ghost Trails, Holographic Glitches, and Dissolves).
 version: 1.0.0
+publish_to: none
 homepage: https://github.com/
 repository: https://github.com/
 
 environment:
-  sdk: '>=3.0.0 <4.0.0'
+  sdk: ^3.11.0
   flutter: ">=3.10.0"
 
 dependencies:
-  flame: ^1.10.0
+  flame: any
   meta: ^1.11.0
+  flame_unified_real_time: any
   flutter:
     sdk: flutter
 
-dependency_overrides:
-  flame:
-    path: ../../flame/packages/flame
-
 dev_dependencies:
-  flutter_lints: ^3.0.0
+  flutter_lints: ^6.0.0
   flutter_test:
     sdk: flutter

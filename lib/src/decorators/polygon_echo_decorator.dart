@@ -1,16 +1,17 @@
-import 'dart:ui';
+import 'dart:ui' as ui;
 
 import 'package:flame/components.dart';
 import 'package:flame/rendering.dart';
 import 'package:meta/meta.dart';
 
 /// A [Decorator] that draws decaying "echoes" (ghost silhouettes) of the component.
+/// It is a pure decorator that expects the [history] of vertices to be provided externally.
 @experimental
 class PolygonEchoDecorator extends Decorator {
   PolygonEchoDecorator({
     required this.vertices,
-    this.color = const Color(0x8800FFFF),
-    this.maxEchoes = 5,
+    required this.history,
+    this.color = const ui.Color(0x8800FFFF),
     this.decayScale = 1.1,
     this.isActive = true,
   });
@@ -18,11 +19,11 @@ class PolygonEchoDecorator extends Decorator {
   /// Current silhouette vertices.
   List<Vector2> vertices;
 
-  /// Base color for the echoes.
-  Color color;
+  /// Historical snapshots of vertices for echo rendering.
+  List<List<Vector2>> history;
 
-  /// Maximum number of ghost silhouettes to show.
-  int maxEchoes;
+  /// Base color for the echoes.
+  ui.Color color;
 
   /// How much each subsequent echo scales up (or down).
   double decayScale;
@@ -30,41 +31,30 @@ class PolygonEchoDecorator extends Decorator {
   /// Whether the effect is active.
   bool isActive;
 
-  final List<List<Vector2>> _history = [];
-
-  void update(double dt) {
-    super.update(dt);
-    if (!isActive) return;
-
-    // Capture current state (clone the list)
-    _history.insert(0, List.from(vertices));
-    if (_history.length > maxEchoes) {
-      _history.removeLast();
-    }
-  }
-
   @override
-  void apply(void Function(Canvas) draw, Canvas canvas) {
+  void apply(void Function(ui.Canvas) draw, ui.Canvas canvas, [Component? component]) {
     if (!isActive || vertices.isEmpty) {
       draw(canvas);
       return;
     }
 
+    final maxEchoes = history.length;
+
     // 1. Draw echoes (from oldest to newest for correct layering)
-    for (int i = _history.length - 1; i >= 0; i--) {
-      final echoVertices = _history[i];
+    for (int i = maxEchoes - 1; i >= 0; i--) {
+      final echoVertices = history[i];
       if (echoVertices.isEmpty) continue;
 
-      final progress = 1.0 - (i / maxEchoes);
+      final progress = 1.0 - (i / (maxEchoes > 0 ? maxEchoes : 1));
       final alpha = (0.5 * progress);
       final scale = 1.0 + (i * (decayScale - 1.0));
 
-      final paint = Paint()
+      final paint = ui.Paint()
         ..color = color.withValues(alpha: alpha)
-        ..style = PaintingStyle.stroke
+        ..style = ui.PaintingStyle.stroke
         ..strokeWidth = 1.5;
 
-      final path = Path();
+      final path = ui.Path();
       for (int k = 0; k < echoVertices.length; k++) {
         if (k == 0) {
           path.moveTo(echoVertices[k].x, echoVertices[k].y);

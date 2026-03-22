@@ -1,4 +1,4 @@
-import 'dart:ui';
+import 'dart:ui' as ui;
 
 import 'package:flame/components.dart';
 import 'package:flame/rendering.dart';
@@ -9,7 +9,7 @@ import 'package:meta/meta.dart';
 class PolygonScanDecorator extends Decorator {
   PolygonScanDecorator({
     required this.vertices,
-    this.color = const Color.fromARGB(255, 255, 0, 0),
+    this.color = const ui.Color.fromARGB(255, 255, 0, 0),
     this.lineHeight = 2.0,
     this.progress = 0.0,
     this.glowAlpha = 0.3,
@@ -20,7 +20,7 @@ class PolygonScanDecorator extends Decorator {
   List<Vector2> vertices;
 
   /// Color of the scanline.
-  Color color;
+  ui.Color color;
 
   /// Height of the scanning line.
   double lineHeight;
@@ -35,18 +35,14 @@ class PolygonScanDecorator extends Decorator {
   bool isActive;
 
   List<Vector2>? _lastVertices;
-  Path? _cachedPath;
+  ui.Path? _cachedPath;
   double _minY = 0.0;
   double _maxY = 0.0;
-  Paint? _linePaint;
-  Paint? _glowPaint;
-
-  void update(double dt) {
-    super.update(dt);
-  }
+  ui.Paint? _linePaint;
+  ui.Paint? _glowPaint;
 
   @override
-  void apply(void Function(Canvas) draw, Canvas canvas) {
+  void apply(void Function(ui.Canvas) draw, ui.Canvas canvas, [Component? component]) {
     // 1. Draw the component first
     draw(canvas);
 
@@ -54,7 +50,7 @@ class PolygonScanDecorator extends Decorator {
 
     if (_lastVertices != vertices) {
       _lastVertices = vertices;
-      _cachedPath = Path();
+      _cachedPath = ui.Path();
       double localMinY = double.infinity;
       double localMaxY = double.negativeInfinity;
       for (int i = 0; i < vertices.length; i++) {
@@ -80,28 +76,28 @@ class PolygonScanDecorator extends Decorator {
     canvas.clipPath(_cachedPath!);
 
     if (_linePaint == null || _linePaint!.color != color) {
-      _linePaint = Paint()
+      _linePaint = ui.Paint()
         ..color = color
-        ..style = PaintingStyle.fill;
+        ..style = ui.PaintingStyle.fill;
     }
 
     // Main line
     canvas.drawRect(
-      Rect.fromLTWH(-1000, currentY - lineHeight / 2, 4000, lineHeight),
+      ui.Rect.fromLTWH(-1000, currentY - lineHeight / 2, 4000, lineHeight),
       _linePaint!,
     );
 
     if (_glowPaint == null ||
         _glowPaint!.color.withValues(alpha: 1.0) !=
             color.withValues(alpha: 1.0)) {
-      _glowPaint = Paint()
+      _glowPaint = ui.Paint()
         ..color = color.withValues(alpha: glowAlpha)
-        ..style = PaintingStyle.fill
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2.0);
+        ..style = ui.PaintingStyle.fill
+        ..maskFilter = const ui.MaskFilter.blur(ui.BlurStyle.normal, 2.0);
     }
 
     canvas.drawRect(
-      Rect.fromLTWH(-1000, currentY - lineHeight * 2, 4000, lineHeight * 4),
+      ui.Rect.fromLTWH(-1000, currentY - lineHeight * 2, 4000, lineHeight * 4),
       _glowPaint!,
     );
 

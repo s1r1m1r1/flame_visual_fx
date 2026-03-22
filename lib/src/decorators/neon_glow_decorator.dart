@@ -46,7 +46,7 @@ class NeonGlowDecorator extends Decorator {
       return;
     }
 
-    final size = component.size;
+    final size = this.component.size;
     if (size.x <= 0 || size.y <= 0) {
       draw(canvas);
       return;

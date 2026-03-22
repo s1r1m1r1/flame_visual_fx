@@ -1,23 +1,56 @@
 import 'dart:math' as math;
-import 'dart:ui';
+import 'dart:ui' as ui;
 import 'package:flame/components.dart';
 import 'package:flame/rendering.dart';
 
-/// A [Decorator] that organically dissolves (erases) the character from bottom to top
-/// or top to bottom over time, using a mathematical wave/noise pattern to create
-/// a "teleportation" or "disintegration" effect!
+enum DissolveType { random, topDown, bottomUp, leftRight, rightLeft, radial }
+
+/// A [Decorator] that organically dissolves (erases) the character.
+/// It uses a pre-calculated noise pattern to create a "teleportation"
+/// or "disintegration" effect. Animation is driven by the [progress] parameter.
 class DissolveDecorator extends Decorator {
   DissolveDecorator({
     required this.component,
     this.isActive = true,
-    this.gridSize = 25,
+    int gridSize = 25,
     this.showResidualEffect = false,
     this.progress = 0.0,
-  });
+    this.noiseGrid,
+    this.type = DissolveType.radial,
+    this.noiseWeight = 0.3,
+    Vector2? visualOffset,
+    Vector2? visualScale,
+    Vector2? visualAnchor,
+    this.renderSize,
+  }) : _gridSize = gridSize,
+       visualOffset = visualOffset ?? Vector2.zero(),
+       visualScale = visualScale ?? Vector2.all(1.0),
+       visualAnchor = visualAnchor ?? Vector2.zero();
+
+  @override
+  void update(double dt) {
+    super.update(dt);
+  }
 
   final PositionComponent component;
   bool isActive;
-  int gridSize;
+
+  int get gridSize => _gridSize;
+  set gridSize(int value) {
+    if (_gridSize != value) {
+      _gridSize = value;
+      _generatedGrid = null; // Invalidate cache!
+    }
+  }
+
+  int _gridSize;
+
+  /// The pattern strategy to use for dissolution.
+  DissolveType type;
+
+  /// How much the noise influences the edge.
+  /// 0.0 for a clean line, 1.0 for a very fuzzy/random edge.
+  double noiseWeight;
 
   /// If true, a faint "residual" silhouette might remain after dissolution.
   /// If false (default), the component is completely hidden at the end of duration.
@@ -26,95 +59,159 @@ class DissolveDecorator extends Decorator {
   /// Current progress of the dissolve effect (0.0 to 1.0).
   double progress;
 
-  final math.Random _random = math.Random();
+  /// A pre-calculated grid of random noise values to act as our "mask texture".
+  /// If null, a default static grid will be used (though it won't be dynamic).
+  List<double>? noiseGrid;
 
-  // A pre-calculated grid of random noise values to act as our "mask texture"
-  List<double>? _noiseGrid;
-  int? _lastGridSize;
+  /// Local offset of the visuals relative to the component origin.
+  Vector2 visualOffset;
 
-  void _initNoise() {
-    if (_noiseGrid != null && _lastGridSize == gridSize) return;
-    _noiseGrid = List.generate(
-      gridSize * gridSize,
-      (_) => _random.nextDouble(),
-    );
-    _lastGridSize = gridSize;
-  }
+  /// Local scale of the visuals relative to the component origin.
+  Vector2 visualScale;
 
-  /// Resets the dissolve effect to the beginning
-  void reset() {
-    progress = 0.0;
-  }
+  /// Local target-specific anchor offset (in logical pixels).
+  Vector2 visualAnchor;
 
-  void update(double dt) {
-    super.update(dt);
-    if (!isActive) return;
-    _initNoise();
-  }
+  /// Optional override for the size of the erasure area.
+  /// If null, the component's logical size is used.
+  Vector2? renderSize;
 
   @override
-  void apply(void Function(Canvas) draw, Canvas canvas) {
-    if (!isActive) {
+  void apply(void Function(ui.Canvas) draw, ui.Canvas canvas) {
+    if (!isActive || progress <= 0) {
       draw(canvas);
       return;
     }
 
-    _initNoise();
-
-    final size = component.size;
-    if (size.x <= 0 || size.y <= 0) {
-      draw(canvas);
+    if (progress >= 1.0) {
+      if (showResidualEffect) {
+        // Draw the ghostly remains
+        final paint = ui.Paint()
+          ..colorFilter = const ui.ColorFilter.matrix([
+            0.2126,
+            0.7152,
+            0.0722,
+            0,
+            0,
+            0.2126,
+            0.7152,
+            0.0722,
+            0,
+            0,
+            0.2126,
+            0.7152,
+            0.0722,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0.3,
+            0,
+          ]);
+        canvas.saveLayer(null, paint);
+        draw(canvas);
+        canvas.restore();
+      }
       return;
     }
 
-    // Calculate how far the dissolve has progressed (0.0 to 1.0)
-    final currentProgress = progress.clamp(0.0, 1.0);
+    // --- Progressive Dissolve Logic ---
+    final grid = _getOrGenerateGrid();
+    final currentGridSize = _gridSize;
 
-    // If we want a clean finish and we've reached the end, just stop drawing
-    if (currentProgress >= 1.0 && !showResidualEffect) {
-      return;
-    }
+    // Use current component size for block calculation.
+    // Decorators are relative to the component bounds.
+    final effectiveSize = renderSize ?? component.size;
+    final double blockW = effectiveSize.x / currentGridSize;
+    final double blockH = effectiveSize.y / currentGridSize;
 
-    // 1. Save an isolated layer where we will draw the original character FIRST
-    canvas.saveLayer(null, Paint());
-    draw(canvas); // The intact character is now painted on this layer
+    // 1. Save an isolated layer where we will draw the original FIRST
+    canvas.saveLayer(null, ui.Paint());
+    draw(canvas); // The intact component is now painted on this layer
 
-    // 2. We now create an "Erasing" brush using BlendMode.dstOut!
-    final eraserPaint = Paint()
-      ..color = const Color(0xFF000000)
-      ..blendMode = BlendMode.dstOut;
+    // 2. Erase blocks based on progress and noise
+    final erasePaint = ui.Paint()..blendMode = ui.BlendMode.dstOut;
+    final edgeWeight = 1.0 - noiseWeight;
 
-    // 3. Draw a procedural noise pattern over the character to erase them chunk by chunk
-    final cellWidth = size.x / gridSize;
-    final cellHeight = size.y / gridSize;
+    canvas.save();
+    canvas.translate(visualOffset.x, visualOffset.y);
+    canvas.scale(visualScale.x, visualScale.y);
+    canvas.translate(visualAnchor.x, visualAnchor.y);
 
-    // IMPORTANT: Flame's Decorator canvas is already translated to the component's top-left
-    // (due to anchor translation being part of the component's transform).
-    // So the sprite is drawn from (0,0) to (size.x, size.y).
-    for (int y = 0; y < gridSize; y++) {
-      for (int x = 0; x < gridSize; x++) {
-        // Position of this cell relative to the top of the sprite
-        final normalizedY = y / gridSize;
+    for (int y = 0; y < currentGridSize; y++) {
+      for (int x = 0; x < currentGridSize; x++) {
+        final nx = (x + 0.5) / currentGridSize;
+        final ny = (y + 0.5) / currentGridSize;
+
+        // Pattern logic
+        final double patternValue = switch (type) {
+          DissolveType.random => 0.0,
+          DissolveType.topDown => ny,
+          DissolveType.bottomUp => 1.0 - ny,
+          DissolveType.leftRight => nx,
+          DissolveType.rightLeft => 1.0 - nx,
+          DissolveType.radial =>
+            math.sqrt(math.pow(nx - 0.5, 2) + math.pow(ny - 0.5, 2)) * 1.414,
+        };
 
         // Fetch pre-calculated noise for this block
-        final noiseValue = _noiseGrid![y * gridSize + x];
+        final noiseValue = grid[y * currentGridSize + x];
 
-        // Logic: if progress >= the threshold, erase this cell.
-        if (currentProgress >= (normalizedY * 0.7 + noiseValue * 0.3)) {
+        // Logic: mix the pattern and noise
+        final threshold =
+            (patternValue * edgeWeight) + (noiseValue * noiseWeight);
+
+        if (progress >= threshold) {
           canvas.drawRect(
-            Rect.fromLTWH(
-              x * cellWidth,
-              y * cellHeight,
-              cellWidth,
-              cellHeight,
+            ui.Rect.fromLTWH(
+              x * blockW,
+              y * blockH,
+              blockW + 0.5,
+              blockH + 0.5,
             ),
-            eraserPaint,
+            erasePaint,
           );
         }
       }
     }
 
-    // 4. Flatten the layer back to the main canvas.
-    canvas.restore();
+    canvas.restore(); // Restore local transform
+    canvas.restore(); // Restore layer
+  }
+
+  /// Internal helper to get either the user-provided noise grid or the cached procedural one.
+  List<double> _getOrGenerateGrid() {
+    if (noiseGrid != null) return noiseGrid!;
+    if (_generatedGrid == null ||
+        _generatedGrid!.length != _gridSize * _gridSize) {
+      _generatedGrid = List.generate(
+        _gridSize * _gridSize,
+        (_) => math.Random().nextDouble(),
+      );
+    }
+    return _generatedGrid!;
+  }
+
+  /// Internal cache for the generated noise grid.
+  List<double>? _generatedGrid;
+
+  /// Utility to create a noise grid from a grayscale image.
+  static Future<List<double>> computeNoiseFromImage(ui.Image image) async {
+    final byteData = await image.toByteData(format: ui.ImageByteFormat.rawRgba);
+    if (byteData == null) return [];
+
+    final int width = image.width;
+    final int height = image.height;
+    final List<double> noise = List.filled(width * height, 0.0);
+
+    for (int i = 0; i < width * height; i++) {
+      final r = byteData.getUint8(i * 4);
+      final g = byteData.getUint8(i * 4 + 1);
+      final b = byteData.getUint8(i * 4 + 2);
+      // Simple average for gray value
+      noise[i] = (r + g + b) / (3.0 * 255.0);
+    }
+    return noise;
   }
 }

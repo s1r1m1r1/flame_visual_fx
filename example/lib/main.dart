@@ -65,7 +65,7 @@ class DecoratorExample extends FlameGame {
               dec.gridSize = 10;
               dec.showResidualEffect = false;
             }
-            dec.reset();
+            dec.progress = 0.0;
           }
         }
       ),
@@ -173,8 +173,8 @@ class DecoratorExample extends FlameGame {
         factory: (Ptero e) {
           return PolygonEchoDecorator(
             vertices: e.contourVertices ?? [],
+            history: [], // Managed by Ptero
             color: const Color(0x6600FFFF),
-            maxEchoes: 6,
             decayScale: 1.15,
           );
         },
@@ -196,6 +196,7 @@ class DecoratorExample extends FlameGame {
         factory: (Ptero e) {
           return PolygonFireDecorator(
             vertices: e.contourVertices ?? [],
+            particles: [], // Managed by Ptero
           );
         },
         onTap: null,
@@ -205,6 +206,7 @@ class DecoratorExample extends FlameGame {
         factory: (Ptero e) {
           return PolygonWhirlDecorator(
             vertices: e.contourVertices ?? [],
+            particles: [], // Managed by Ptero
             color: const Color(0xFF00FFCC),
           );
         },

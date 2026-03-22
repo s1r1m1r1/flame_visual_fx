@@ -1,5 +1,5 @@
 import 'dart:math' as math;
-import 'dart:ui';
+import 'dart:ui' as ui;
 
 import 'package:flame/components.dart';
 import 'package:flame/rendering.dart';
@@ -10,7 +10,7 @@ import 'package:meta/meta.dart';
 class PolygonShieldDecorator extends Decorator {
   PolygonShieldDecorator({
     required this.vertices,
-    this.color = const Color(0xFF0099FF),
+    this.color = const ui.Color(0xFF0099FF),
     this.thickness = 2.0,
     this.offset = 10.0,
     this.vibration = 2.0,
@@ -24,7 +24,7 @@ class PolygonShieldDecorator extends Decorator {
   List<Vector2> vertices;
 
   /// Shield color.
-  Color color;
+  ui.Color color;
 
   /// Thickness of the shield line.
   double thickness;
@@ -47,12 +47,8 @@ class PolygonShieldDecorator extends Decorator {
   /// Animation progress (0.0 to 1.0).
   double progress;
 
-  void update(double dt) {
-    super.update(dt);
-  }
-
   @override
-  void apply(void Function(Canvas) draw, Canvas canvas) {
+  void apply(void Function(ui.Canvas) draw, ui.Canvas canvas, [Component? component]) {
     // 1. Draw the component first
     draw(canvas);
 
@@ -62,7 +58,7 @@ class PolygonShieldDecorator extends Decorator {
     final scale = 1.0 + ((offset + currentVibration) * 0.01);
 
     // Create the silhouette path
-    final path = Path();
+    final path = ui.Path();
     for (int i = 0; i < vertices.length; i++) {
       if (i == 0) {
         path.moveTo(vertices[i].x, vertices[i].y);
@@ -72,14 +68,13 @@ class PolygonShieldDecorator extends Decorator {
     }
     path.close();
 
-    final paint = Paint()
+    final paint = ui.Paint()
       ..color = color
-      ..style = PaintingStyle.stroke
+      ..style = ui.PaintingStyle.stroke
       ..strokeWidth = thickness
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 1.0);
+      ..maskFilter = const ui.MaskFilter.blur(ui.BlurStyle.normal, 1.0);
 
     // Apply dash effect
-    // Note: Manual dashing because PathMetric is easier for cross-platform consistency
     final metrics = path.computeMetrics().toList();
     if (metrics.isEmpty) return;
 
@@ -95,7 +90,7 @@ class PolygonShieldDecorator extends Decorator {
     canvas.rotate(math.sin(progress * 2) * 0.05); // Subtle slow rotation
     canvas.translate(-center.x, -center.y);
 
-    final dashPath = Path();
+    final dashPath = ui.Path();
     double currentDist = (progress * 20) % (dashLength + dashGap);
 
     while (currentDist < totalLength) {
@@ -103,7 +98,7 @@ class PolygonShieldDecorator extends Decorator {
         currentDist,
         math.min(currentDist + dashLength, totalLength),
       );
-      dashPath.addPath(sub, Offset.zero);
+      dashPath.addPath(sub, ui.Offset.zero);
       currentDist += dashLength + dashGap;
     }
 

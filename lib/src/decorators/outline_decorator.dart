@@ -54,12 +54,14 @@ class OutlineDecorator extends Decorator {
 
   final ui.Paint _imagePaint = ui.Paint();
 
-  void update(double dt) {
-    super.update(dt);
-  }
+  void update(double dt) {}
 
   @override
-  void apply(void Function(ui.Canvas) draw, ui.Canvas canvas) {
+  void apply(
+    void Function(ui.Canvas) draw,
+    ui.Canvas canvas, [
+    Component? component,
+  ]) {
     if (!isActive) {
       draw(canvas);
       return;
@@ -72,8 +74,10 @@ class OutlineDecorator extends Decorator {
       final Object effectiveKey = '${cacheKey}_$thickness';
       final cachedImage = _globalImageCache[effectiveKey];
       if (cachedImage != null) {
-        _imagePaint.colorFilter =
-            ui.ColorFilter.mode(color, ui.BlendMode.srcIn);
+        _imagePaint.colorFilter = ui.ColorFilter.mode(
+          color,
+          ui.BlendMode.srcIn,
+        );
 
         // Draw the baked outline silhouette FIRST (behind)
         final double pad = thickness;
@@ -160,9 +164,10 @@ class OutlineDecorator extends Decorator {
 
       canvas.saveLayer(null, outlinePaint);
 
-      // Use a circular distribution (16 samples) to ensure a perfectly smooth
+      // Use a circular distribution to ensure a perfectly smooth
       // thick outline without gaps or "delamination".
-      const int samples = 16;
+      // We scale samples with thickness to maintain density.
+      final int samples = max(16, (thickness * 2 * pi / 4).ceil());
       for (int i = 0; i < samples; i++) {
         final double angle = (i * 2 * pi) / samples;
         canvas.save();
@@ -214,8 +219,10 @@ class OutlineDecorator extends Decorator {
     // We bake a WHITE silhouette. This allows us to tint it to ANY color
     // using ColorFilter.mode(color, BlendMode.srcIn) during drawImage.
     final bakePaint = ui.Paint()
-      ..colorFilter =
-          const ui.ColorFilter.mode(ui.Color(0xFFFFFFFF), ui.BlendMode.srcIn);
+      ..colorFilter = const ui.ColorFilter.mode(
+        ui.Color(0xFFFFFFFF),
+        ui.BlendMode.srcIn,
+      );
 
     canvas.saveLayer(null, bakePaint);
 
@@ -240,13 +247,16 @@ class OutlineDecorator extends Decorator {
     final resultPicture = recorder.endRecording();
 
     // Async conversion to Image
-    resultPicture.toImage(imgW, imgH).then((image) {
-      _globalImageCache[effectiveKey] = image;
-      _pendingBakes.remove(effectiveKey);
-      resultPicture.dispose();
-    }).catchError((_) {
-      _pendingBakes.remove(effectiveKey);
-      resultPicture.dispose();
-    });
+    resultPicture
+        .toImage(imgW, imgH)
+        .then((image) {
+          _globalImageCache[effectiveKey] = image;
+          _pendingBakes.remove(effectiveKey);
+          resultPicture.dispose();
+        })
+        .catchError((_) {
+          _pendingBakes.remove(effectiveKey);
+          resultPicture.dispose();
+        });
   }
 }

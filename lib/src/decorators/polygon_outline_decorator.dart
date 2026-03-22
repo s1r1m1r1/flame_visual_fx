@@ -68,12 +68,10 @@ class PolygonOutlineDecorator extends Decorator {
   Path? _staticPath;
   Paint? _paint;
 
-  void update(double dt) {
-    super.update(dt);
-  }
+  void update(double dt) {}
 
   @override
-  void apply(void Function(Canvas) draw, Canvas canvas) {
+  void apply(void Function(Canvas) draw, Canvas canvas, [Component? component]) {
     // 1. Draw the component normally first
     draw(canvas);
 

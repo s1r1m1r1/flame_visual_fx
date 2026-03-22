@@ -1,4 +1,4 @@
-import 'dart:ui';
+import 'dart:ui' as ui;
 
 import 'package:flame/components.dart';
 import 'package:flame/rendering.dart';
@@ -10,7 +10,7 @@ import 'package:meta/meta.dart';
 class PolygonSnakeDecorator extends Decorator {
   PolygonSnakeDecorator({
     required this.vertices,
-    this.color = const Color(0xFF00FFCC),
+    this.color = const ui.Color(0xFF00FFCC),
     this.thickness = 3.0,
     this.lengthRatio = 0.2,
     this.progress = 0.0,
@@ -22,7 +22,7 @@ class PolygonSnakeDecorator extends Decorator {
   List<Vector2> vertices;
 
   /// Color of the energy snake.
-  Color color;
+  ui.Color color;
 
   /// Thickness of the snake.
   double thickness;
@@ -39,18 +39,14 @@ class PolygonSnakeDecorator extends Decorator {
   /// Whether the effect is active.
   bool isActive;
 
-  void update(double dt) {
-    super.update(dt);
-  }
-
   @override
-  void apply(void Function(Canvas) draw, Canvas canvas) {
+  void apply(void Function(ui.Canvas) draw, ui.Canvas canvas, [Component? component]) {
     // 1. Draw the component first
     draw(canvas);
 
     if (!isActive || vertices.length < 2) return;
 
-    final path = Path();
+    final path = ui.Path();
     for (int i = 0; i < vertices.length; i++) {
       if (i == 0) {
         path.moveTo(vertices[i].x, vertices[i].y);
@@ -69,30 +65,30 @@ class PolygonSnakeDecorator extends Decorator {
     final startDist = totalLength * progress;
 
     // Extract the segment (handling wrap-around)
-    final segmentPath = Path();
+    final segmentPath = ui.Path();
     if (startDist + snakeLength <= totalLength) {
       segmentPath.addPath(
         metric.extractPath(startDist, startDist + snakeLength),
-        Offset.zero,
+        ui.Offset.zero,
       );
     } else {
       // Wrap around the end back to the start
       segmentPath.addPath(
         metric.extractPath(startDist, totalLength),
-        Offset.zero,
+        ui.Offset.zero,
       );
       segmentPath.addPath(
         metric.extractPath(0, (startDist + snakeLength) % totalLength),
-        Offset.zero,
+        ui.Offset.zero,
       );
     }
 
-    final paint = Paint()
+    final paint = ui.Paint()
       ..color = color
-      ..style = PaintingStyle.stroke
+      ..style = ui.PaintingStyle.stroke
       ..strokeWidth = thickness
-      ..strokeCap = StrokeCap.round
-      ..maskFilter = MaskFilter.blur(BlurStyle.normal, blurSigma);
+      ..strokeCap = ui.StrokeCap.round
+      ..maskFilter = ui.MaskFilter.blur(ui.BlurStyle.normal, blurSigma);
 
     canvas.drawPath(segmentPath, paint);
 
@@ -101,9 +97,9 @@ class PolygonSnakeDecorator extends Decorator {
         .getTangentForOffset((startDist + snakeLength) % totalLength)
         ?.position;
     if (headPoint != null) {
-      final headPaint = Paint()
-        ..color = const Color(0xFFFFFFFF)
-        ..maskFilter = MaskFilter.blur(BlurStyle.normal, blurSigma * 2);
+      final headPaint = ui.Paint()
+        ..color = const ui.Color(0xFFFFFFFF)
+        ..maskFilter = ui.MaskFilter.blur(ui.BlurStyle.normal, blurSigma * 2);
       canvas.drawCircle(headPoint, thickness * 0.8, headPaint);
     }
   }
