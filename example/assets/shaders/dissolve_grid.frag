@@ -3,7 +3,6 @@
 
 precision mediump float;
 
-uniform vec4 uWorldToUV[4];
 uniform vec2 uSize;
 uniform float uThreshold;
 uniform float uType;
@@ -18,9 +17,8 @@ float rand(vec2 co) {
 }
 
 void main() {
-    mat4 m = mat4(uWorldToUV[0], uWorldToUV[1], uWorldToUV[2], uWorldToUV[3]);
-    vec4 localPos = m * vec4(FlutterFragCoord().xy, 0.0, 1.0);
-    vec2 uv = localPos.xy;
+    // FragCoord is local in saveLayer context
+    vec2 uv = FlutterFragCoord().xy / uSize;
     
     if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) {
         fragColor = vec4(0.0);
@@ -45,7 +43,6 @@ void main() {
     } else if (uType > 4.5 && uType < 5.5) { // radial
         patternValue = distance(gridUV, vec2(0.5)) * 1.414;
     } else { // random (index 0) or fallback
-        // For random, we use the noise only, or a random base per cell
         patternValue = rand(gridUV + 0.123); 
     }
 
@@ -56,10 +53,10 @@ void main() {
     float edgeWeight = 1.0 - uNoiseWeight;
     float threshold = (patternValue * edgeWeight) + (noiseValue * uNoiseWeight);
 
-    // Alpha 1.0 means we ERASE the destination (dstOut)
     float alpha = smoothstep(uThreshold - 0.02, uThreshold + 0.02, threshold);
 
-    // Prevent optimization of uTime and uSize if they are not used in some paths
-    float dummy = (uTime + uSize.x + uSize.y) * 0.0;
-    fragColor = vec4(0.0, 0.0, 0.0, (1.0 - alpha) + dummy);
+    // For dstOut blending: Alpha 1.0 means ERASE, 0.0 means keep.
+    // Prevent optimization of uTime
+    float dummy = uTime * 0.0;
+    fragColor = vec4(0.0, 0.0, 0.0, alpha + dummy);
 }

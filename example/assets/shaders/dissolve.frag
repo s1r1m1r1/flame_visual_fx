@@ -4,7 +4,6 @@ precision highp float;
 
 #include <flutter/runtime_effect.glsl>
 
-uniform vec4 uWorldToUV[4];
 uniform vec2 uSize;
 uniform float uThreshold;
 uniform float uType;
@@ -34,14 +33,11 @@ float noise_2(vec2 p) {
 }
 
 void main() {
-    mat4 m = mat4(uWorldToUV[0], uWorldToUV[1], uWorldToUV[2], uWorldToUV[3]);
-    vec4 localPos = m * vec4(FlutterFragCoord().xy, 0.0, 1.0);
-    vec2 uv = localPos.xy;
+    vec2 uv = FlutterFragCoord().xy / uSize;
     
     // 1. Calculate pattern value based on uType
     float patternValue = 0.0;
     
-    // DissolveType: random(0), topDown(1), bottomUp(2), leftRight(3), rightLeft(4), radial(5)
     // DissolveType: random(0), topDown(1), bottomUp(2), leftRight(3), rightLeft(4), radial(5)
     if (uType > 0.5 && uType < 1.5) { // topDown
         patternValue = uv.y;
@@ -65,10 +61,9 @@ void main() {
     float threshold = (patternValue * edgeWeight) + (noiseValue * uNoiseWeight);
     
     // 4. Thresholding
-    // We use a very sharp smoothstep for a clean edge
     float alpha = smoothstep(uThreshold - 0.01, uThreshold + 0.01, threshold);
 
-    // Prevent optimization of uSize
-    float dummy = (uSize.x + uSize.y) * 0.0;
-    fragColor = vec4(0.0, 0.0, 0.0, (1.0 - alpha) + dummy);
+    // Alpha 1.0 means ERASE in dstOut mode
+    float dummy = uTime * 0.0;
+    fragColor = vec4(0.0, 0.0, 0.0, alpha + dummy);
 }
