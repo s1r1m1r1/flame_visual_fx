@@ -141,7 +141,9 @@ class ShaderOutlineDecorator extends VFXDecorator {
     final double w = component.size.x;
     final double h = component.size.y;
     final double pad = thickness;
-    final Object? effectiveKey = cacheKey != null ? '${cacheKey}_$thickness' : null;
+    final Object? effectiveKey = cacheKey != null
+        ? '${cacheKey}_$thickness'
+        : null;
 
     if (effectiveKey != null) {
       if (_pendingBakes.contains(effectiveKey)) return;
@@ -157,21 +159,24 @@ class ShaderOutlineDecorator extends VFXDecorator {
     final picture = recorder.endRecording();
 
     // Convert to image. Note: this is typically an expensive operation!
-    picture.toImage((w + pad * 2).ceil(), (h + pad * 2).ceil()).then((image) {
-      if (effectiveKey != null) {
-        _globalImageCache[effectiveKey] = image;
-        _pendingBakes.remove(effectiveKey);
-      } else {
-        _lastImage?.dispose();
-        _lastImage = image;
-      }
-      picture.dispose();
-    }).catchError((_) {
-      if (effectiveKey != null) {
-        _pendingBakes.remove(effectiveKey);
-      }
-      picture.dispose();
-    });
+    picture
+        .toImage((w + pad * 2).ceil(), (h + pad * 2).ceil())
+        .then((image) {
+          if (effectiveKey != null) {
+            _globalImageCache[effectiveKey] = image;
+            _pendingBakes.remove(effectiveKey);
+          } else {
+            _lastImage?.dispose();
+            _lastImage = image;
+          }
+          picture.dispose();
+        })
+        .catchError((_) {
+          if (effectiveKey != null) {
+            _pendingBakes.remove(effectiveKey);
+          }
+          picture.dispose();
+        });
   }
 
   /// Forces the decorator to re-capture the component's silhouette.

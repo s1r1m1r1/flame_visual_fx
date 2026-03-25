@@ -75,7 +75,11 @@ class PolygonOutlineDecorator extends VFXDecorator {
   }
 
   @override
-  void apply(void Function(Canvas) draw, Canvas canvas, [Component? component]) {
+  void apply(
+    void Function(Canvas) draw,
+    Canvas canvas, [
+    Component? component,
+  ]) {
     // 1. Draw the component normally first
     draw(canvas);
 

@@ -15,7 +15,9 @@ class DamageFlashDecorator extends VFXDecorator {
     this.isActive = true,
     this.useSaveLayer = true,
   }) : super(
-         controller: controller ?? (duration != null ? LinearEffectController(duration) : null),
+         controller:
+             controller ??
+             (duration != null ? LinearEffectController(duration) : null),
        );
 
   Color color;
@@ -32,8 +34,11 @@ class DamageFlashDecorator extends VFXDecorator {
   }
 
   @override
-  void apply(void Function(Canvas) draw, Canvas canvas,
-      [Component? component]) {
+  void apply(
+    void Function(Canvas) draw,
+    Canvas canvas, [
+    Component? component,
+  ]) {
     if (!isActive || progress <= 0 || progress >= 1.0) {
       draw(canvas);
       return;
@@ -50,10 +55,7 @@ class DamageFlashDecorator extends VFXDecorator {
       draw(canvas);
       component.paint.colorFilter = oldFilter;
     } else {
-      canvas.saveLayer(
-        null,
-        Paint()..colorFilter = filter,
-      );
+      canvas.saveLayer(null, Paint()..colorFilter = filter);
 
       draw(canvas);
 

@@ -8,11 +8,8 @@ abstract interface class DissolveProvider {
 
 /// An effect that smoothly changes the [dissolveThreshold] of a [DissolveProvider].
 class DissolveEffect extends Effect with EffectTarget<DissolveProvider> {
-  DissolveEffect(
-    EffectController controller, {
-    super.key,
-    super.onComplete,
-  }) : super(controller);
+  DissolveEffect(EffectController controller, {super.key, super.onComplete})
+    : super(controller);
 
   @override
   void apply(double progress) {

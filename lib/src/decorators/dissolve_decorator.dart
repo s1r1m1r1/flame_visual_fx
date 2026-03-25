@@ -42,7 +42,7 @@ class DissolveDecorator extends VFXDecorator implements DissolveProvider {
   }
 
   final PositionComponent component;
-  
+
   /// The mask rendering strategy.
   DissolveMask mask;
 
@@ -84,10 +84,26 @@ class DissolveDecorator extends VFXDecorator implements DissolveProvider {
         // Draw the ghostly remains
         final paint = ui.Paint()
           ..colorFilter = const ui.ColorFilter.matrix([
-            0.2126, 0.7152, 0.0722, 0, 0,
-            0.2126, 0.7152, 0.0722, 0, 0,
-            0.2126, 0.7152, 0.0722, 0, 0,
-            0,      0,      0,      0.3, 0,
+            0.2126,
+            0.7152,
+            0.0722,
+            0,
+            0,
+            0.2126,
+            0.7152,
+            0.0722,
+            0,
+            0,
+            0.2126,
+            0.7152,
+            0.0722,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0.3,
+            0,
           ]);
         canvas.saveLayer(null, paint);
         draw(canvas);

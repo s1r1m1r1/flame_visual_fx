@@ -91,8 +91,10 @@ class ContourFinder {
             nextY >= startY &&
             nextY < endY) {
           if (_getAlpha(byteData, nextX, nextY, width) > alphaThreshold) {
-            back = Point(current.x + neighbors[(idx + 7) % 8].x,
-                current.y + neighbors[(idx + 7) % 8].y);
+            back = Point(
+              current.x + neighbors[(idx + 7) % 8].x,
+              current.y + neighbors[(idx + 7) % 8].y,
+            );
             current = Point(nextX, nextY);
             found = true;
             break;

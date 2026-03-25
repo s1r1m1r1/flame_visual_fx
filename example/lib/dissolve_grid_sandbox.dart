@@ -217,6 +217,7 @@ class DissolveGridGame extends FlameGame with PanDetector {
       priority: 5,
     );
     ptero.debugMode = showDebug;
+    ptero2.debugMode = showDebug;
     await world.add(ptero);
     await world.add(ptero2);
 
@@ -230,13 +231,26 @@ class DissolveGridGame extends FlameGame with PanDetector {
       progress: threshold,
       noiseWeight: noiseWeight,
       type: DissolveType.values[typeIndex],
-      autoAnimate: false, // We control it from the slider/Ptero
+      autoAnimate: true,
       calibrationOffset: Vector2(calibrateX, calibrateY),
       onApply: (s, p, t) {
-        s.setFloat(22, gridSize);
+        // uSize(0,1), progress(2), type(3), noise(4), time(5), gridSize(6)
+        s.setFloat(6, gridSize);
       },
     );
     ptero.decorator.addLast(decorator!);
+    ptero2.decorator.addLast(
+      ShaderDissolveDecorator(
+        shader: program.fragmentShader(),
+        component: ptero2,
+        progress: threshold,
+        noiseWeight: noiseWeight,
+        type: DissolveType.values[typeIndex],
+        autoAnimate: true,
+        calibrationOffset: Vector2(calibrateX, calibrateY),
+        onApply: (s, p, t) => s.setFloat(6, gridSize),
+      ),
+    );
 
     camera.viewfinder.position = Vector2.zero();
     camera.viewfinder.zoom = 1.0;
@@ -259,13 +273,21 @@ class DissolveGridGame extends FlameGame with PanDetector {
     this.calibrateX = calibrateX;
     this.calibrateY = calibrateY;
 
-    if (decorator != null) {
-      decorator!.progress = threshold;
-      decorator!.noiseWeight = noiseWeight;
-      decorator!.type = DissolveType.values[typeIndex];
-      decorator!.calibrationOffset = Vector2(calibrateX, calibrateY);
-      ptero.debugMode = showDebug;
+    void sync(Ptero p) {
+      final d = p.decorator.find<ShaderDissolveDecorator>();
+      if (d != null) {
+        d.progress = threshold;
+        d.noiseWeight = noiseWeight;
+        d.type = DissolveType.values[typeIndex];
+        d.calibrationOffset = Vector2(calibrateX, calibrateY);
+        // Special Grid uniform at offset 6
+        d.onApply = (s, p, t) => s.setFloat(6, gridSize);
+      }
+      p.debugMode = showDebug;
     }
+
+    sync(ptero);
+    sync(ptero2);
   }
 
   @override

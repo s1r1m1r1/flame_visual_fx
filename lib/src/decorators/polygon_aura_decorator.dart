@@ -46,7 +46,11 @@ class PolygonAuraDecorator extends VFXDecorator {
   static final Map<int, ui.MaskFilter> _blurCache = {};
 
   @override
-  void apply(void Function(ui.Canvas) draw, ui.Canvas canvas, [Component? component]) {
+  void apply(
+    void Function(ui.Canvas) draw,
+    ui.Canvas canvas, [
+    Component? component,
+  ]) {
     // 1. Draw the component first
     draw(canvas);
 

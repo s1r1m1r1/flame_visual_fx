@@ -93,5 +93,3 @@ abstract class VFXDecorator extends Decorator with VisualFX {
     updateVFX(dt);
   }
 }
-
-

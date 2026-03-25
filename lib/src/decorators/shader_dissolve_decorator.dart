@@ -30,13 +30,11 @@ class ShaderDissolveDecorator extends VFXDecorator {
   Vector2? renderSize;
 
   /// Optional callback to set additional uniforms for custom shaders.
-  final void Function(ui.FragmentShader shader, double progress, double time)?
+  void Function(ui.FragmentShader shader, double progress, double time)?
   onApply;
 
   /// Global accumulated time for periodic shader animations.
   double time = 0.0;
-
-
 
   bool isActive;
   bool autoAnimate;
@@ -60,7 +58,6 @@ class ShaderDissolveDecorator extends VFXDecorator {
     Vector2? visualAnchor,
     this.renderSize,
     this.onApply,
-
   }) : visualOffset = visualOffset ?? Vector2.zero(),
        visualScale = visualScale ?? Vector2.all(1.0),
        visualAnchor = visualAnchor ?? Vector2.zero(),

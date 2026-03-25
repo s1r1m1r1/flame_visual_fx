@@ -33,7 +33,11 @@ class PolygonEchoDecorator extends VFXDecorator {
   bool isActive;
 
   @override
-  void apply(void Function(ui.Canvas) draw, ui.Canvas canvas, [Component? component]) {
+  void apply(
+    void Function(ui.Canvas) draw,
+    ui.Canvas canvas, [
+    Component? component,
+  ]) {
     if (!isActive || vertices.isEmpty) {
       draw(canvas);
       return;
@@ -68,7 +72,8 @@ class PolygonEchoDecorator extends VFXDecorator {
       canvas.save();
       // Simple scaling from approx center
       if (decayScale != 1.0 && echoVertices.isNotEmpty) {
-        final center = echoVertices.reduce((a, b) => a + b) /
+        final center =
+            echoVertices.reduce((a, b) => a + b) /
             echoVertices.length.toDouble();
         canvas.translate(center.x, center.y);
         canvas.scale(scale);

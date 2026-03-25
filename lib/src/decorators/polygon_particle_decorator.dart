@@ -48,7 +48,11 @@ class PolygonParticleDecorator extends VFXDecorator {
   bool isActive;
 
   @override
-  void apply(void Function(ui.Canvas) draw, ui.Canvas canvas, [Component? component]) {
+  void apply(
+    void Function(ui.Canvas) draw,
+    ui.Canvas canvas, [
+    Component? component,
+  ]) {
     // 1. Draw the component first
     draw(canvas);
 
@@ -62,11 +66,7 @@ class PolygonParticleDecorator extends VFXDecorator {
       final progress = p.progress;
       paint.color = color.withValues(alpha: progress);
 
-      canvas.drawCircle(
-        p.position.toOffset(),
-        particleSize * progress,
-        paint,
-      );
+      canvas.drawCircle(p.position.toOffset(), particleSize * progress, paint);
     }
   }
 }

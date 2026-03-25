@@ -27,77 +27,108 @@ class VisualFXBenchmark extends FlameGame {
 
   final List<MapEntry<String, void Function(Ptero)?>> effects = [
     MapEntry(
-        'FastHueEffect (Paint)',
-        (Ptero p) => p.add(FastHueEffect(
-              2 * pi,
-              InfiniteEffectController(LinearEffectController(3)),
-            ))),
+      'FastHueEffect (Paint)',
+      (Ptero p) => p.add(
+        FastHueEffect(
+          2 * pi,
+          InfiniteEffectController(LinearEffectController(3)),
+        ),
+      ),
+    ),
     MapEntry(
-        'FastFlashEffect (Paint)',
-        (Ptero p) => p.add(FastFlashEffect(
-              Colors.white,
-              InfiniteEffectController(LinearEffectController(1.0)),
-            ))),
+      'FastFlashEffect (Paint)',
+      (Ptero p) => p.add(
+        FastFlashEffect(
+          Colors.white,
+          InfiniteEffectController(LinearEffectController(1.0)),
+        ),
+      ),
+    ),
     MapEntry('None', null),
     MapEntry(
-        'Outline Decorator',
-        (Ptero p) => p.decorator.addLast(OutlineDecorator(
-            component: p, vertices: p.contourVertices, thickness: 3))),
+      'Outline Decorator',
+      (Ptero p) => p.decorator.addLast(
+        OutlineDecorator(
+          component: p,
+          vertices: p.contourVertices,
+          thickness: 3,
+        ),
+      ),
+    ),
     MapEntry(
-        'Polygon Outline Decorator',
-        (Ptero p) => p.decorator.addLast(PolygonOutlineDecorator(
-            vertices: p.contourVertices ?? [], thickness: 3))),
+      'Polygon Outline Decorator',
+      (Ptero p) => p.decorator.addLast(
+        PolygonOutlineDecorator(
+          vertices: p.contourVertices ?? [],
+          thickness: 3,
+        ),
+      ),
+    ),
     MapEntry(
-        'Aura Decorator',
-        (Ptero p) => p.decorator
-            .addLast(PolygonAuraDecorator(vertices: p.contourVertices ?? []))),
+      'Aura Decorator',
+      (Ptero p) => p.decorator.addLast(
+        PolygonAuraDecorator(vertices: p.contourVertices ?? []),
+      ),
+    ),
     MapEntry(
-        'Scanline Decorator',
-        (Ptero p) => p.decorator
-            .addLast(PolygonScanDecorator(vertices: p.contourVertices ?? []))),
+      'Scanline Decorator',
+      (Ptero p) => p.decorator.addLast(
+        PolygonScanDecorator(vertices: p.contourVertices ?? []),
+      ),
+    ),
     MapEntry(
-        'Fire Decorator',
-        (Ptero p) => p.decorator.addLast(PolygonFireDecorator(
-              vertices: p.contourVertices ?? [],
-              particles: [], // Managed by Ptero
-            ))),
+      'Fire Decorator',
+      (Ptero p) => p.decorator.addLast(
+        PolygonFireDecorator(
+          vertices: p.contourVertices ?? [],
+          particles: [], // Managed by Ptero
+        ),
+      ),
+    ),
     MapEntry(
-        'Whirl Decorator',
-        (Ptero p) => p.decorator.addLast(PolygonWhirlDecorator(
-              vertices: p.contourVertices ?? [],
-              particles: [], // Managed by Ptero
-            ))),
+      'Whirl Decorator',
+      (Ptero p) => p.decorator.addLast(
+        PolygonWhirlDecorator(
+          vertices: p.contourVertices ?? [],
+          particles: [], // Managed by Ptero
+        ),
+      ),
+    ),
     MapEntry(
-        'Hue Decorator',
-        (Ptero p) => p.decorator.addLast(HueDecorator(
-              component: p,
-            ))),
+      'Hue Decorator',
+      (Ptero p) => p.decorator.addLast(HueDecorator(component: p)),
+    ),
     MapEntry(
-        'Flash Decorator',
-        (Ptero p) => p.decorator.addLast(DamageFlashDecorator(
-              color: Colors.white,
-              duration: 1.0,
-              isActive: true,
-            )..flash())),
+      'Flash Decorator',
+      (Ptero p) => p.decorator.addLast(
+        DamageFlashDecorator(color: Colors.white, duration: 1.0, isActive: true)
+          ..flash(),
+      ),
+    ),
     MapEntry(
-        'Neon Glow Decorator',
-        (Ptero p) => p.decorator.addLast(NeonGlowDecorator(
-              component: p,
-              radius: 8,
-            ))),
+      'Neon Glow Decorator',
+      (Ptero p) =>
+          p.decorator.addLast(NeonGlowDecorator(component: p, radius: 8)),
+    ),
     MapEntry(
-        'Arc Decorator',
-        (Ptero p) => p.decorator.addLast(PolygonArcDecorator(
-              vertices: p.contourVertices ?? [],
-              activeArcs: [], // Managed by Ptero
-              contactPoints: [], // Managed by Ptero
-            ))),
+      'Arc Decorator',
+      (Ptero p) => p.decorator.addLast(
+        PolygonArcDecorator(
+          vertices: p.contourVertices ?? [],
+          activeArcs: [], // Managed by Ptero
+          contactPoints: [], // Managed by Ptero
+        ),
+      ),
+    ),
     MapEntry(
-        'Particle Decorator',
-        (Ptero p) => p.decorator.addLast(PolygonParticleDecorator(
-              vertices: p.contourVertices ?? [],
-              particles: [], // Managed by Ptero
-            ))),
+      'Particle Decorator',
+      (Ptero p) => p.decorator.addLast(
+        PolygonParticleDecorator(
+          vertices: p.contourVertices ?? [],
+          particles: [], // Managed by Ptero
+        ),
+      ),
+    ),
   ];
 
   String get currentEffectName => effects[_currentEffectIndex].key;
@@ -108,10 +139,7 @@ class VisualFXBenchmark extends FlameGame {
     camera.viewfinder.anchor = Anchor.center;
 
     await camera.viewport.addAll([
-      FpsTextComponent(
-        position: Vector2(10, 10),
-        anchor: Anchor.topLeft,
-      ),
+      FpsTextComponent(position: Vector2(10, 10), anchor: Anchor.topLeft),
       counter = TextComponent(
         position: Vector2(10, 40),
         anchor: Anchor.topLeft,
@@ -147,20 +175,17 @@ class VisualFXBenchmark extends FlameGame {
     const height = 800.0;
 
     world.addAll(
-      List.generate(
-        count,
-        (_) {
-          final ptero = Ptero(
-            size: pteroSize,
-            position: Vector2(
-              (random.nextDouble() - 0.5) * width,
-              (random.nextDouble() - 0.5) * height,
-            ),
-          );
-          effectApplier?.call(ptero);
-          return ptero;
-        },
-      ),
+      List.generate(count, (_) {
+        final ptero = Ptero(
+          size: pteroSize,
+          position: Vector2(
+            (random.nextDouble() - 0.5) * width,
+            (random.nextDouble() - 0.5) * height,
+          ),
+        );
+        effectApplier?.call(ptero);
+        return ptero;
+      }),
     );
   }
 }
@@ -203,32 +228,36 @@ class _BenchmarkScreenState extends State<BenchmarkScreen> {
                   children: [
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.blueGrey.shade800,
-                          foregroundColor: Colors.white),
+                        backgroundColor: Colors.blueGrey.shade800,
+                        foregroundColor: Colors.white,
+                      ),
                       onPressed: () => setState(() => game.addSprites(1)),
                       child: const Text('Add 1'),
                     ),
                     const SizedBox(width: 10),
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.blueGrey.shade800,
-                          foregroundColor: Colors.white),
+                        backgroundColor: Colors.blueGrey.shade800,
+                        foregroundColor: Colors.white,
+                      ),
                       onPressed: () => setState(() => game.addSprites(50)),
                       child: const Text('Add 50'),
                     ),
                     const SizedBox(width: 10),
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.blueGrey.shade800,
-                          foregroundColor: Colors.white),
+                        backgroundColor: Colors.blueGrey.shade800,
+                        foregroundColor: Colors.white,
+                      ),
                       onPressed: () => setState(() => game.addSprites(100)),
                       child: const Text('Add 100'),
                     ),
                     const SizedBox(width: 10),
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.orange.shade800,
-                          foregroundColor: Colors.white),
+                        backgroundColor: Colors.orange.shade800,
+                        foregroundColor: Colors.white,
+                      ),
                       onPressed: () => setState(() => game.addSprites(500)),
                       child: const Text('Add 500'),
                     ),
@@ -244,7 +273,9 @@ class _BenchmarkScreenState extends State<BenchmarkScreen> {
                     ),
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 8),
+                        horizontal: 20,
+                        vertical: 8,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.black54,
                         borderRadius: BorderRadius.circular(20),
@@ -253,7 +284,9 @@ class _BenchmarkScreenState extends State<BenchmarkScreen> {
                       child: Text(
                         game.currentEffectName,
                         style: const TextStyle(
-                            color: Colors.white, fontWeight: FontWeight.bold),
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                     IconButton.filled(

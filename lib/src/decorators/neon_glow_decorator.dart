@@ -66,8 +66,10 @@ class NeonGlowDecorator extends VFXDecorator {
       final cachedImage = _globalImageCache[effectiveKey];
       if (cachedImage != null) {
         // 1. Draw cached glow behind
-        _imagePaint.colorFilter =
-            ui.ColorFilter.mode(color, ui.BlendMode.srcIn);
+        _imagePaint.colorFilter = ui.ColorFilter.mode(
+          color,
+          ui.BlendMode.srcIn,
+        );
 
         // Glow is baked with extra padding for the blur (radius * 3 for safety)
         final double pad = discRadius * 3.0;
@@ -96,8 +98,10 @@ class NeonGlowDecorator extends VFXDecorator {
     // --- FALLBACK PATH: saveLayer fallback ---
     final glowPaint = ui.Paint()
       ..colorFilter = ui.ColorFilter.mode(color, ui.BlendMode.srcIn)
-      ..imageFilter =
-          ui.ImageFilter.blur(sigmaX: safeRadius, sigmaY: safeRadius);
+      ..imageFilter = ui.ImageFilter.blur(
+        sigmaX: safeRadius,
+        sigmaY: safeRadius,
+      );
 
     canvas.saveLayer(null, glowPaint);
     draw(canvas);
@@ -132,8 +136,10 @@ class NeonGlowDecorator extends VFXDecorator {
 
     // We bake a WHITE blurred silhouette.
     final bakePaint = ui.Paint()
-      ..colorFilter =
-          const ui.ColorFilter.mode(ui.Color(0xFFFFFFFF), ui.BlendMode.srcIn)
+      ..colorFilter = const ui.ColorFilter.mode(
+        ui.Color(0xFFFFFFFF),
+        ui.BlendMode.srcIn,
+      )
       ..imageFilter = ui.ImageFilter.blur(sigmaX: radius, sigmaY: radius);
 
     canvas.saveLayer(null, bakePaint);
@@ -142,13 +148,16 @@ class NeonGlowDecorator extends VFXDecorator {
 
     final resultPicture = recorder.endRecording();
 
-    resultPicture.toImage(imgW, imgH).then((image) {
-      _globalImageCache[effectiveKey] = image;
-      _pendingBakes.remove(effectiveKey);
-      resultPicture.dispose();
-    }).catchError((_) {
-      _pendingBakes.remove(effectiveKey);
-      resultPicture.dispose();
-    });
+    resultPicture
+        .toImage(imgW, imgH)
+        .then((image) {
+          _globalImageCache[effectiveKey] = image;
+          _pendingBakes.remove(effectiveKey);
+          resultPicture.dispose();
+        })
+        .catchError((_) {
+          _pendingBakes.remove(effectiveKey);
+          resultPicture.dispose();
+        });
   }
 }

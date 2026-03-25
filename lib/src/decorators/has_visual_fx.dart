@@ -80,16 +80,13 @@ mixin HasVisualFX on PositionComponent {
       final baseDecorator = decorator is _MultipleFXDecorator
           ? (decorator as _MultipleFXDecorator).base
           : decorator;
-      
+
       final effects = _vfxList.whereType<VFXDecorator>().toList();
-      
+
       if (effects.isEmpty) {
         decorator = baseDecorator;
       } else {
-        decorator = _MultipleFXDecorator(
-          base: baseDecorator,
-          effects: effects,
-        );
+        decorator = _MultipleFXDecorator(base: baseDecorator, effects: effects);
       }
     }
   }
@@ -97,10 +94,7 @@ mixin HasVisualFX on PositionComponent {
 
 /// A decorator that chains multiple VFX decorators on top of a base decorator.
 class _MultipleFXDecorator extends Decorator {
-  _MultipleFXDecorator({
-    required this.base,
-    required this.effects,
-  });
+  _MultipleFXDecorator({required this.base, required this.effects});
 
   final Decorator base;
   final List<VFXDecorator> effects;

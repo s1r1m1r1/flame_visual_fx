@@ -23,10 +23,10 @@ void main() {
       final component = TestComponent();
       final controller = LinearEffectController(1.0);
       final decorator = TestDecorator(controller: controller);
-      
+
       final baseDecorator = component.decorator;
       component.addVFX(decorator);
-      
+
       // It should be wrapped
       expect(component.decorator, isA<Decorator>());
       expect(component.decorator, isNot(equals(decorator)));
@@ -55,11 +55,11 @@ void main() {
       expect(component.decorator, isNot(equals(vfx2)));
 
       component.update(1.0);
-      // vfx1 should be finished and removed. 
+      // vfx1 should be finished and removed.
       // Since only vfx2 remains, it's still wrapped in _MultipleFXDecorator to keep base.
       expect(component.decorator, isA<Decorator>());
       expect(component.decorator, isNot(equals(baseDecorator)));
-      
+
       component.update(1.0);
       // vfx2 should be finished and removed
       expect(component.decorator, equals(baseDecorator));
@@ -68,10 +68,12 @@ void main() {
     test('onComplete callback is triggered', () {
       bool completed = false;
       final component = TestComponent();
-      component.addVFX(TestDecorator(
-        controller: LinearEffectController(1.0),
-        onComplete: () => completed = true,
-      ));
+      component.addVFX(
+        TestDecorator(
+          controller: LinearEffectController(1.0),
+          onComplete: () => completed = true,
+        ),
+      );
 
       component.update(1.0);
       expect(completed, isTrue);
@@ -79,38 +81,38 @@ void main() {
 
     test('completed future resolves', () async {
       final component = TestComponent();
-      final vfx = component.addVFX(TestDecorator(
-        controller: LinearEffectController(1.0),
-      ));
+      final vfx = component.addVFX(
+        TestDecorator(controller: LinearEffectController(1.0)),
+      );
 
       final future = vfx.completed;
       component.update(1.0);
-      
+
       await expectLater(future, completes);
     });
 
     test('can add and update a pure VisualFX (non-decorator)', () {
       final component = TestComponent();
       final baseDecorator = component.decorator;
-      
+
       final vfx = TestPureFX();
       vfx.controller = LinearEffectController(1.0);
-      
+
       component.addVFX(vfx);
-      
+
       // Should NOT change the decorator chain if it's just a logic FX
       expect(component.decorator, equals(baseDecorator));
-      
+
       component.update(0.5);
       expect(vfx.progress, 0.5);
-      
+
       component.update(0.5);
       expect(vfx.progress, 1.0);
-      
+
       // Should be removed after completion
       component.update(0.0);
       // We can't easily check internal _vfxList, but we can check if it stop updating
-      vfx.progress = 0; 
+      vfx.progress = 0;
       component.update(0.1);
       expect(vfx.progress, 0.0); // It was removed, so it didn't update to 0.1
     });

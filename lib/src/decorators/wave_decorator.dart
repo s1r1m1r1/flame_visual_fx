@@ -7,10 +7,7 @@ import 'package:meta/meta.dart';
 import 'vfx_decorator.dart';
 
 /// The axis along which the wave displacement is applied.
-enum WaveAxis {
-  horizontal,
-  vertical,
-}
+enum WaveAxis { horizontal, vertical }
 
 /// A [Decorator] that applies a sine-wave displacement to the component,
 /// creating a "ripple" or "wave" effect.
