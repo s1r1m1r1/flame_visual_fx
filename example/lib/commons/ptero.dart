@@ -216,10 +216,8 @@ class Ptero<T extends FlameGame> extends SpriteAnimationComponent
 
     // Shader Dissolve
     final shaderDiss = dec.find<ShaderDissolveDecorator>();
-    if (shaderDiss != null && !shaderDiss.autoAnimate) {
+    if (shaderDiss != null && shaderDiss.autoAnimate) {
       // ONLY animate if autoAnimate is true in the DECORATOR itself.
-      // But Ptero's logic was forcing it. 
-      // Let's change it so we can control it from the sandbox.
       shaderDiss.progress = (gameTime * 0.25) % 1.2;
     }
 
