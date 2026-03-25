@@ -2,10 +2,11 @@ import 'dart:math' as math;
 import 'dart:ui' as ui;
 import 'package:flame/components.dart';
 import 'package:flame/rendering.dart';
+import 'vfx_decorator.dart';
 
 /// A [Decorator] that applies an outline to the component using native saveLayer tinting.
 /// Designed for animation via thickness property.
-class PulseOutlineDecorator extends Decorator {
+class PulseOutlineDecorator extends VFXDecorator {
   PulseOutlineDecorator({
     required this.component,
     this.color = const ui.Color.fromARGB(255, 253, 6, 138),

@@ -2,11 +2,12 @@ import 'dart:math';
 import 'dart:ui' as ui;
 import 'package:flame/components.dart';
 import 'package:flame/rendering.dart';
+import 'vfx_decorator.dart';
 
 /// A [Decorator] that applies an outline to the component using native saveLayer tinting.
 /// This sidesteps all WebGL and Transform Matrix rounding errors, natively tracking camera
 /// limits and asset bounds securely.
-class OutlineDecorator extends Decorator {
+class OutlineDecorator extends VFXDecorator {
   OutlineDecorator({
     required this.component,
     this.vertices,
@@ -54,7 +55,10 @@ class OutlineDecorator extends Decorator {
 
   final ui.Paint _imagePaint = ui.Paint();
 
-  void update(double dt) {}
+  @override
+  void update(double dt) {
+    super.update(dt);
+  }
 
   @override
   void apply(

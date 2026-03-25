@@ -1,11 +1,12 @@
 import 'dart:ui' as ui;
 import 'package:flame/components.dart';
 import 'package:flame/rendering.dart';
+import 'vfx_decorator.dart';
 
 /// A [Decorator] that applies a "Hologram" (Chromatic Aberration / Glitch) effect.
 /// It splits the character into Cyan and Magenta channels, shifts them horizontally,
 /// and introduces vertical jitter. Animation is driven by external parameters.
-class HologramDecorator extends Decorator {
+class HologramDecorator extends VFXDecorator {
   HologramDecorator({
     required this.component,
     this.intensity = 3.0,

@@ -3,11 +3,12 @@ import 'dart:ui' as ui;
 import 'package:flame/components.dart';
 import 'package:flame/rendering.dart';
 import 'package:meta/meta.dart';
+import 'vfx_decorator.dart';
 
 /// A [Decorator] that draws a traveling energy "snake" (a sub-segment of the
 /// silhouette) that cycles around the polygon.
 @experimental
-class PolygonSnakeDecorator extends Decorator {
+class PolygonSnakeDecorator extends VFXDecorator {
   PolygonSnakeDecorator({
     required this.vertices,
     this.color = const ui.Color(0xFF00FFCC),

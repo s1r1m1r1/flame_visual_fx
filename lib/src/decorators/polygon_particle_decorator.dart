@@ -2,6 +2,7 @@ import 'dart:ui' as ui;
 import 'package:flame/components.dart';
 import 'package:flame/rendering.dart';
 import 'package:meta/meta.dart';
+import 'vfx_decorator.dart';
 
 class SimpleParticle {
   Vector2 position;
@@ -22,7 +23,7 @@ class SimpleParticle {
 /// A [Decorator] that draws particles from the vertices of a polygon silhouette.
 /// This is a pure decorator that expects [particles] to be provided externally.
 @experimental
-class PolygonParticleDecorator extends Decorator {
+class PolygonParticleDecorator extends VFXDecorator {
   PolygonParticleDecorator({
     required this.vertices,
     required this.particles,

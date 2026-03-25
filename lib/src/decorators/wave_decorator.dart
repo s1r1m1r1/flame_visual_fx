@@ -4,6 +4,7 @@ import 'dart:ui' as ui;
 import 'package:flame/components.dart';
 import 'package:flame/rendering.dart';
 import 'package:meta/meta.dart';
+import 'vfx_decorator.dart';
 
 /// The axis along which the wave displacement is applied.
 enum WaveAxis {
@@ -17,7 +18,7 @@ enum WaveAxis {
 /// This is achieved by slicing the component into thin strips and drawing
 /// each strip with a calculated offset.
 @experimental
-class WaveDecorator extends Decorator {
+class WaveDecorator extends VFXDecorator {
   WaveDecorator({
     required this.component,
     this.amplitude = 5.0,

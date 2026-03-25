@@ -10,10 +10,7 @@ class Ptero<T extends FlameGame> extends SpriteAnimationComponent
   static final Map<String, Future<List<List<Vector2>>>> _contourCache = {};
 
   Ptero({super.position, Vector2? size, super.priority, super.key})
-      : super(
-          size: size ?? Vector2(150, 100),
-          anchor: Anchor.center,
-        );
+    : super(size: size ?? Vector2(150, 100), anchor: Anchor.center);
 
   List<List<Vector2>>? _allContours;
   int _lastFrameIndex = -1;
@@ -160,8 +157,11 @@ class Ptero<T extends FlameGame> extends SpriteAnimationComponent
           final start = vertices[idx1].toOffset();
           final end = vertices[idx2].toOffset();
           _contactPoints.add(start);
-          _activeArcs
-              .add([start, (start + end) / 2 + const ui.Offset(0, -20), end]);
+          _activeArcs.add([
+            start,
+            (start + end) / 2 + const ui.Offset(0, -20),
+            end,
+          ]);
         }
       }
     }
@@ -171,16 +171,20 @@ class Ptero<T extends FlameGame> extends SpriteAnimationComponent
     while (_particleSpawnAccumulator >= 1.0) {
       _particleSpawnAccumulator -= 1.0;
       final v = vertices[_random.nextInt(vertices.length)];
-      _fireParticles.add(FireParticle(
-        position: v.clone(),
-        velocity: Vector2((_random.nextDouble() - 0.5) * 10, -40),
-        maxLifetime: 0.8,
-      ));
-      _simpleParticles.add(SimpleParticle(
-        position: v.clone(),
-        velocity: Vector2(0, -20),
-        maxLife: 1.0,
-      ));
+      _fireParticles.add(
+        FireParticle(
+          position: v.clone(),
+          velocity: Vector2((_random.nextDouble() - 0.5) * 10, -40),
+          maxLifetime: 0.8,
+        ),
+      );
+      _simpleParticles.add(
+        SimpleParticle(
+          position: v.clone(),
+          velocity: Vector2(0, -20),
+          maxLife: 1.0,
+        ),
+      );
     }
   }
 
@@ -204,7 +208,19 @@ class Ptero<T extends FlameGame> extends SpriteAnimationComponent
     final diss = dec.find<DissolveDecorator>();
     if (diss != null) {
       diss.progress = (gameTime * 0.5) % 1.2;
-      diss.noiseGrid ??= List.generate(25 * 25, (_) => _random.nextDouble());
+      diss.mask.customNoise ??= List.generate(
+        25 * 25,
+        (_) => _random.nextDouble(),
+      );
+    }
+
+    // Shader Dissolve
+    final shaderDiss = dec.find<ShaderDissolveDecorator>();
+    if (shaderDiss != null && !shaderDiss.autoAnimate) {
+      // ONLY animate if autoAnimate is true in the DECORATOR itself.
+      // But Ptero's logic was forcing it. 
+      // Let's change it so we can control it from the sandbox.
+      shaderDiss.progress = (gameTime * 0.25) % 1.2;
     }
 
     // Polygon Parameters
@@ -246,6 +262,12 @@ class Ptero<T extends FlameGame> extends SpriteAnimationComponent
         outline.cacheKey = 'ptero_outline_${size.x}_${size.y}_$currentIndex';
       }
     }
+
+    dec.find<ShaderOutlineDecorator>()
+      ?..cacheKey = (animationTicker?.currentIndex != null)
+          ? 'ptero_outline_${size.x}_${size.y}_${animationTicker!.currentIndex}'
+          : null
+      ..invalidate();
 
     final neon = dec.find<NeonGlowDecorator>();
     if (neon != null) {

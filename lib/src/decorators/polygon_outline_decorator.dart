@@ -4,6 +4,7 @@ import 'dart:ui';
 import 'package:flame/components.dart';
 import 'package:flame/rendering.dart';
 import 'package:meta/meta.dart';
+import 'vfx_decorator.dart';
 
 /// The type of animation for the polygon outline.
 enum PolygonOutlineMode {
@@ -23,7 +24,7 @@ enum PolygonOutlineMode {
 /// This is useful for highlighting components with custom shapes or adding
 /// magical/electric energy effects.
 @experimental
-class PolygonOutlineDecorator extends Decorator {
+class PolygonOutlineDecorator extends VFXDecorator {
   PolygonOutlineDecorator({
     required this.vertices,
     this.color = const Color(0xFF00FFFF),
@@ -68,7 +69,10 @@ class PolygonOutlineDecorator extends Decorator {
   Path? _staticPath;
   Paint? _paint;
 
-  void update(double dt) {}
+  @override
+  void update(double dt) {
+    super.update(dt);
+  }
 
   @override
   void apply(void Function(Canvas) draw, Canvas canvas, [Component? component]) {

@@ -1,9 +1,10 @@
 import 'dart:ui' as ui;
 import 'package:flame/components.dart';
 import 'package:flame/rendering.dart';
+import 'vfx_decorator.dart';
 
 /// A [Decorator] that converts the colors of the component to grayscale.
-class GrayscaleDecorator extends Decorator {
+class GrayscaleDecorator extends VFXDecorator {
   GrayscaleDecorator({
     this.isActive = true,
     this.useSaveLayer = true,

@@ -3,10 +3,11 @@ import 'dart:ui' as ui;
 import 'package:flame/components.dart';
 import 'package:flame/rendering.dart';
 import 'package:meta/meta.dart';
+import 'vfx_decorator.dart';
 
 /// A [Decorator] that draws a layered, glowing aura around a polygon silhouette.
 @experimental
-class PolygonAuraDecorator extends Decorator {
+class PolygonAuraDecorator extends VFXDecorator {
   PolygonAuraDecorator({
     required this.vertices,
     this.color = const ui.Color(0xFFFF00FF),

@@ -3,11 +3,12 @@ import 'dart:ui' as ui;
 import 'package:flame/components.dart';
 import 'package:flame/rendering.dart';
 import 'package:meta/meta.dart';
+import 'vfx_decorator.dart';
 
 /// A [Decorator] that draws electric arcs jumping between points on a polygon silhouette.
 /// This is a pure decorator that expects [activeArcs] and [contactPoints] to be provided.
 @experimental
-class PolygonArcDecorator extends Decorator {
+class PolygonArcDecorator extends VFXDecorator {
   PolygonArcDecorator({
     required this.vertices,
     required this.activeArcs,

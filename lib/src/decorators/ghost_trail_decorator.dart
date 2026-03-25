@@ -2,11 +2,12 @@ import 'dart:collection';
 import 'dart:ui';
 import 'package:flame/components.dart';
 import 'package:flame/rendering.dart';
+import 'vfx_decorator.dart';
 
 /// A [Decorator] that creates a "Ghost Trail" / "Afterimage" effect.
 /// It records the past positions of the component and renders faded,
 /// color-tinted silhouettes trailing behind the moving character!
-class GhostTrailDecorator extends Decorator {
+class GhostTrailDecorator extends VFXDecorator {
   GhostTrailDecorator({
     required this.component,
     this.color = const Color.fromARGB(255, 114, 0, 255), // Purple ghost
@@ -25,7 +26,9 @@ class GhostTrailDecorator extends Decorator {
   // The simplest way without un-projecting Flame matrices is to track its local logical position!
   Vector2 _lastKnownPosition = Vector2.zero();
 
+  @override
   void update(double dt) {
+    super.update(dt);
     if (!isActive) {
       _ghosts.clear();
       return;

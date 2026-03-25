@@ -1,9 +1,9 @@
-import 'dart:math' as math;
 import 'dart:ui' as ui;
 import 'package:flame/components.dart';
 import 'package:flame/rendering.dart';
 import 'package:flutter/material.dart' show Colors;
 import 'package:meta/meta.dart';
+import 'vfx_decorator.dart';
 
 class WhirlParticle {
   WhirlParticle({
@@ -26,7 +26,7 @@ class WhirlParticle {
 /// A [Decorator] that draws orbiting ghost-like particles from a polygon silhouette.
 /// This is a pure decorator that expects [particles] to be provided externally.
 @experimental
-class PolygonWhirlDecorator extends Decorator {
+class PolygonWhirlDecorator extends VFXDecorator {
   PolygonWhirlDecorator({
     required this.vertices,
     required this.particles,

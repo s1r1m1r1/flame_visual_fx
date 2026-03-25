@@ -5,23 +5,50 @@ import 'package:flame/events.dart';
 import 'package:flame/rendering.dart' hide HueDecorator;
 import 'package:flame_visual_fx/flame_visual_fx.dart';
 import 'package:flutter/material.dart';
+import 'dart:ui' as ui;
 
 import 'commons/ptero.dart';
 
 void main() {
-  runApp(
-    GameWidget(
-      game: DecoratorExample(),
-    ),
-  );
+  runApp(GameWidget(game: DecoratorExample()));
 }
 
 class DecoratorExample extends FlameGame {
+  late ui.FragmentProgram outlineProgram;
+  late ui.FragmentProgram dissolveProgram;
+  late ui.FragmentProgram dissolveGridProgram;
+  late ui.FragmentProgram dissolveSliceProgram;
+  late ui.FragmentProgram dissolveWaveProgram;
+  late ui.FragmentProgram dissolveShatterProgram;
+  late ui.FragmentProgram dissolveClipProgram;
+
   @override
   Color backgroundColor() => const Color(0xFF1A1A1A);
 
   @override
   Future<void> onLoad() async {
+    outlineProgram = await ui.FragmentProgram.fromAsset(
+      'assets/shaders/shader_outline.frag',
+    );
+    dissolveProgram = await ui.FragmentProgram.fromAsset(
+      'assets/shaders/dissolve.frag',
+    );
+    dissolveGridProgram = await ui.FragmentProgram.fromAsset(
+      'assets/shaders/dissolve_grid.frag',
+    );
+    dissolveSliceProgram = await ui.FragmentProgram.fromAsset(
+      'assets/shaders/dissolve_slice.frag',
+    );
+    dissolveWaveProgram = await ui.FragmentProgram.fromAsset(
+      'assets/shaders/dissolve_wave.frag',
+    );
+    dissolveShatterProgram = await ui.FragmentProgram.fromAsset(
+      'assets/shaders/dissolve_shatter.frag',
+    );
+    dissolveClipProgram = await ui.FragmentProgram.fromAsset(
+      'assets/shaders/dissolve_clip.frag',
+    );
+
     const margin = 64.0;
     final availableSize = size - Vector2.all(margin * 2);
     final decoratorData = [
@@ -29,45 +56,161 @@ class DecoratorExample extends FlameGame {
       (
         name: 'Pulse Outline',
         factory: (Ptero e) => PulseOutlineDecorator(component: e),
-        onTap: null
+        onTap: null,
       ),
       (
         name: 'Outline',
         factory: (Ptero e) => OutlineDecorator(component: e),
-        onTap: null
+        onTap: null,
       ),
       (
         name: 'Neon Glow',
         factory: (Ptero e) => NeonGlowDecorator(component: e),
-        onTap: null
+        onTap: null,
+      ),
+      (
+        name: 'Shader Outline\n(GPU Fast)',
+        factory: (Ptero e) => ShaderOutlineDecorator(
+          shader: outlineProgram.fragmentShader(),
+          component: e,
+          thickness: 4.0,
+        ),
+        onTap: (dec) {
+          if (dec is ShaderOutlineDecorator) {
+            dec.thickness = dec.thickness == 4.0 ? 8.0 : 4.0;
+            dec.invalidate(); // Force rebake for new thickness
+          }
+        },
       ),
       (
         name: 'Hologram',
         factory: (Ptero e) => HologramDecorator(component: e),
-        onTap: null
+        onTap: null,
       ),
       (
         name: 'Dissolve\n(Tap: Grid & Residual)',
-        factory: (Ptero e) => DissolveDecorator(component: e),
+        factory: (Ptero e) =>
+            DissolveDecorator(component: e, mask: GridDissolveMask()),
         onTap: (dec) {
           if (dec is DissolveDecorator) {
-            if (dec.gridSize == 10) {
-              dec.gridSize = 25;
-              dec.showResidualEffect = false;
-            } else if (dec.gridSize == 25 && !dec.showResidualEffect) {
-              dec.showResidualEffect = true;
-            } else if (dec.gridSize == 25 && dec.showResidualEffect) {
-              dec.gridSize = 50;
-              dec.showResidualEffect = false;
-            } else if (dec.gridSize == 50) {
-              dec.gridSize = 100;
-            } else {
-              dec.gridSize = 10;
-              dec.showResidualEffect = false;
+            final mask = dec.mask;
+            if (mask is GridDissolveMask) {
+              if (mask.gridSize == 10) {
+                mask.gridSize = 25;
+                dec.showResidualEffect = false;
+              } else if (mask.gridSize == 25 && !dec.showResidualEffect) {
+                dec.showResidualEffect = true;
+              } else if (mask.gridSize == 25 && dec.showResidualEffect) {
+                mask.gridSize = 50;
+                dec.showResidualEffect = false;
+              } else if (mask.gridSize == 50) {
+                mask.gridSize = 100;
+              } else {
+                mask.gridSize = 10;
+                dec.showResidualEffect = false;
+              }
+              dec.progress = 0.0;
             }
-            dec.progress = 0.0;
           }
-        }
+        },
+      ),
+      (
+        name: 'Shader Dissolve\n(GPU Fast)',
+        factory: (Ptero e) => ShaderDissolveDecorator(
+          shader: dissolveProgram.fragmentShader(),
+          component: e,
+          noiseWeight: 1.0,
+          progress: 0.5,
+        ),
+        onTap: (dec) {
+          if (dec is ShaderDissolveDecorator) {
+            // Cycle through types
+            final nextType = DissolveType
+                .values[(dec.type.index + 1) % DissolveType.values.length];
+            dec.type = nextType;
+            dec.progress = 0.5;
+          }
+        },
+      ),
+      (
+        name: 'Shader Grid\n(GPU Fast)',
+        factory: (Ptero e) => ShaderDissolveDecorator(
+          shader: dissolveGridProgram.fragmentShader(),
+          component: e,
+          progress: 0.5,
+          onApply: (s, p, t) =>
+              s.setFloat(22, 4.0), // grid size shift to 22 (after 16+2+4)
+        ),
+        onTap: (dec) {
+          if (dec is ShaderDissolveDecorator) {
+            final nextType = DissolveType
+                .values[(dec.type.index + 1) % DissolveType.values.length];
+            dec.type = nextType;
+            dec.progress = 0.5;
+          }
+        },
+      ),
+      (
+        name: 'Shader Slice\n(GPU Fast)',
+        factory: (Ptero e) => ShaderDissolveDecorator(
+          shader: dissolveSliceProgram.fragmentShader(),
+          component: e,
+          onApply: (s, p, t) {
+            s.setFloat(22, 8.0); // 8 slices instead of 10
+            s.setFloat(23, 0.0); // uDirection (horizontal)
+          },
+        ),
+        onTap: (dec) {
+          if (dec is ShaderDissolveDecorator) {
+            final nextType = DissolveType
+                .values[(dec.type.index + 1) % DissolveType.values.length];
+            dec.type = nextType;
+          }
+        },
+      ),
+      (
+        name: 'Shader Wave\n(GPU Fast)',
+        factory: (Ptero e) => ShaderDissolveDecorator(
+          shader: dissolveWaveProgram.fragmentShader(),
+          component: e,
+          onApply: (s, p, t) {
+            s.setFloat(22, 8.0); // uAmplitude
+            s.setFloat(23, 3.0); // uFrequency
+          },
+        ),
+        onTap: (dec) {
+          if (dec is ShaderDissolveDecorator) {
+            final nextType = DissolveType
+                .values[(dec.type.index + 1) % DissolveType.values.length];
+            dec.type = nextType;
+          }
+        },
+      ),
+      (
+        name: 'Shader Shatter\n(GPU Voronoi)',
+        factory: (Ptero e) => ShaderDissolveDecorator(
+          shader: dissolveShatterProgram.fragmentShader(),
+          component: e,
+          onApply: (s, p, t) {
+            s.setFloat(8, 10.0); // uGridSize
+          },
+        ),
+        onTap: (dec) {
+          if (dec is ShaderDissolveDecorator) {
+            final nextType = DissolveType
+                .values[(dec.type.index + 1) % DissolveType.values.length];
+            dec.type = nextType;
+          }
+        },
+      ),
+      (
+        name: 'Shader Clip\n(GPU Logic)',
+        factory: (Ptero e) => ShaderDissolveDecorator(
+          shader: dissolveClipProgram.fragmentShader(),
+          component: e,
+          onApply: (s, p, t) => s.setFloat(22, 15.0), // uClipEdges shift to 22
+        ),
+        onTap: null,
       ),
       (
         name: 'Damage Flash\n(Tap to Flash)',
@@ -76,14 +219,12 @@ class DecoratorExample extends FlameGame {
           if (dec is DamageFlashDecorator) {
             dec.flash();
           }
-        }
+        },
       ),
       (
         name: 'Ghost Trail\n(Tap to rotate angle)',
-        factory: (Ptero e) => GhostTrailDecorator(
-              component: e,
-            ),
-        onTap: null
+        factory: (Ptero e) => GhostTrailDecorator(component: e),
+        onTap: null,
       ),
       (
         name: 'Hue Shift\n(Tap to Cycle)',
@@ -92,29 +233,27 @@ class DecoratorExample extends FlameGame {
           if (dec is HueDecorator) {
             dec.hue = (dec.hue + math.pi / 4) % (math.pi * 2);
           }
-        }
+        },
       ),
       (
         name: 'Waves\n(Tap to switch Axis)',
-        factory: (Ptero e) => WaveDecorator(
-              component: e,
-              amplitude: 8.0,
-              frequency: 0.1,
-            ),
+        factory: (Ptero e) =>
+            WaveDecorator(component: e, amplitude: 8.0, frequency: 0.1),
         onTap: (dec) {
           if (dec is WaveDecorator) {
             dec.axis = dec.axis == WaveAxis.horizontal
                 ? WaveAxis.vertical
                 : WaveAxis.horizontal;
           }
-        }
+        },
       ),
       (
         name: 'Silhouette (Wavy)\n(Tap: Mode)',
         factory: (Ptero e) {
           final s = e.size;
           // Use auto-detected vertices if available, fallback to circle
-          final vertices = e.contourVertices ??
+          final vertices =
+              e.contourVertices ??
               List.generate(16, (i) {
                 final angle = (i / 16) * math.pi * 2;
                 final rx = s.x * 0.7;
@@ -268,9 +407,10 @@ class DecoratorCell extends PositionComponent with TapCallbacks {
     ptero = Ptero(
       position: pteroPos..translate(0, -64),
       size: Vector2(emberWidth, emberHeight),
-    );
+    )..debugMode = true;
     await add(
-        ptero); // Ensure Ptero's onLoad (and contour detection) is complete
+      ptero,
+    ); // Ensure Ptero's onLoad (and contour detection) is complete
 
     fxDecorator = decoratorFactory(ptero);
     if (fxDecorator != null) {

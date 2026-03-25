@@ -3,10 +3,11 @@ import 'dart:ui' as ui;
 import 'package:flame/components.dart';
 import 'package:flame/rendering.dart';
 import 'package:meta/meta.dart';
+import 'vfx_decorator.dart';
 
 /// A [Decorator] that draws a horizontal scanline clipped to a polygon silhouette.
 @experimental
-class PolygonScanDecorator extends Decorator {
+class PolygonScanDecorator extends VFXDecorator {
   PolygonScanDecorator({
     required this.vertices,
     this.color = const ui.Color.fromARGB(255, 255, 0, 0),

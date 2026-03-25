@@ -4,10 +4,11 @@ import 'dart:ui' as ui;
 import 'package:flame/components.dart';
 import 'package:flame/rendering.dart';
 import 'package:meta/meta.dart';
+import 'vfx_decorator.dart';
 
 /// A [Decorator] that draws a dashed, vibrating "force field" around a polygon silhouette.
 @experimental
-class PolygonShieldDecorator extends Decorator {
+class PolygonShieldDecorator extends VFXDecorator {
   PolygonShieldDecorator({
     required this.vertices,
     this.color = const ui.Color(0xFF0099FF),

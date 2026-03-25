@@ -2,6 +2,7 @@ import 'dart:ui' as ui;
 import 'package:flame/components.dart';
 import 'package:flame/rendering.dart';
 import 'package:meta/meta.dart';
+import 'vfx_decorator.dart';
 
 class FireParticle {
   FireParticle({
@@ -22,7 +23,7 @@ class FireParticle {
 /// A [Decorator] that draws glowing fire particles from a polygon silhouette.
 /// This is a pure decorator that expects [particles] to be provided externally.
 @experimental
-class PolygonFireDecorator extends Decorator {
+class PolygonFireDecorator extends VFXDecorator {
   PolygonFireDecorator({
     required this.vertices,
     required this.particles,

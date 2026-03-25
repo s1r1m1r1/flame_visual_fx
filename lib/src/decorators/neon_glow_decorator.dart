@@ -2,12 +2,13 @@ import 'dart:math' as math;
 import 'dart:ui' as ui;
 import 'package:flame/components.dart';
 import 'package:flame/rendering.dart';
+import 'vfx_decorator.dart';
 
 /// A [Decorator] that applies a "Neon Glow" (Soft Aura) effect behind the component.
 /// It uses standard Flutter `ImageFilter.blur` to expand the component's alpha channel
 /// into a soft glowing shadow, tinted with a vibrant neon color.
 /// For animations (pulsating glow), use [NeonGlowEffect].
-class NeonGlowDecorator extends Decorator {
+class NeonGlowDecorator extends VFXDecorator {
   NeonGlowDecorator({
     required this.component,
     this.color = const ui.Color.fromARGB(255, 0, 255, 255), // Cyberpunk Cyan

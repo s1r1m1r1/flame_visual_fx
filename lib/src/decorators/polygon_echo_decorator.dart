@@ -3,11 +3,12 @@ import 'dart:ui' as ui;
 import 'package:flame/components.dart';
 import 'package:flame/rendering.dart';
 import 'package:meta/meta.dart';
+import 'vfx_decorator.dart';
 
 /// A [Decorator] that draws decaying "echoes" (ghost silhouettes) of the component.
 /// It is a pure decorator that expects the [history] of vertices to be provided externally.
 @experimental
-class PolygonEchoDecorator extends Decorator {
+class PolygonEchoDecorator extends VFXDecorator {
   PolygonEchoDecorator({
     required this.vertices,
     required this.history,
