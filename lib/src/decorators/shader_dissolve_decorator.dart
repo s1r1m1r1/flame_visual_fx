@@ -1,7 +1,7 @@
 import 'dart:ui' as ui;
 import 'package:flame/components.dart';
 import 'package:flame/rendering.dart';
-
+import 'package:vector_math/vector_math_64.dart' as v64;
 import 'vfx_decorator.dart';
 import 'dissolve_mask.dart';
 
@@ -17,15 +17,6 @@ class ShaderDissolveDecorator extends VFXDecorator {
   /// How much the noise influences the edge.
   double noiseWeight;
 
-  /// Local offset of the visuals relative to the component origin.
-  Vector2 visualOffset;
-
-  /// Local scale of the visuals relative to the component origin.
-  Vector2 visualScale;
-
-  /// Local target-specific anchor offset (in logical pixels).
-  Vector2 visualAnchor;
-
   /// Optional override for the size of the erasure area.
   Vector2? renderSize;
 
@@ -36,15 +27,23 @@ class ShaderDissolveDecorator extends VFXDecorator {
   /// Global accumulated time for periodic shader animations.
   double time = 0.0;
 
+  /// The image of the sprite/animation to sample from directly.
+  ui.Image image;
+
+  /// The source rectangle within the image to sample from (for sprite sheets).
+  ui.Rect sourceRect;
+
   bool isActive;
   bool autoAnimate;
 
   /// Manual calibration offset. Applied as a size adjustment in logical units.
   Vector2 calibrationOffset;
-
+  @Deprecated('This is not working as expected')
   ShaderDissolveDecorator({
     required this.shader,
     required this.component,
+    required this.image,
+    required this.sourceRect,
     this.type = DissolveType.bottomUp,
     this.noiseWeight = 0.3,
     this.isActive = true,
@@ -53,15 +52,10 @@ class ShaderDissolveDecorator extends VFXDecorator {
     super.controller,
     super.onComplete,
     double progress = 0.0,
-    Vector2? visualOffset,
-    Vector2? visualScale,
-    Vector2? visualAnchor,
+
     this.renderSize,
     this.onApply,
-  }) : visualOffset = visualOffset ?? Vector2.zero(),
-       visualScale = visualScale ?? Vector2.all(1.0),
-       visualAnchor = visualAnchor ?? Vector2.zero(),
-       calibrationOffset = calibrationOffset ?? Vector2.zero(),
+  }) : calibrationOffset = calibrationOffset ?? Vector2.zero(),
        super(initialProgress: progress);
 
   @override
@@ -91,64 +85,101 @@ class ShaderDissolveDecorator extends VFXDecorator {
       return;
     }
 
-    try {
-      if (!game.isLoaded) {
-        draw(canvas);
-        return;
-      }
-
-      if (effectiveSize.x <= 0 || effectiveSize.y <= 0) {
-        draw(canvas);
-        return;
-      }
-
-      // COORDINATE SYSTEM:
-      // FlutterFragCoord() inside a saveLayer with a transformed canvas returns
-      // component-LOCAL coordinates (0..size.x, 0..size.y), NOT screen-physical.
-      // Therefore, UV = FragCoord / Size works directly without Matrix4 inversion.
-
-      final w = effectiveSize.x + calibrationOffset.x;
-      final h = effectiveSize.y + calibrationOffset.y;
-
-      // Uniforms: uSize (0,1), progress (2), type (3), noise (4), time (5)
-      shader.setFloat(0, w);
-      shader.setFloat(1, h);
-      shader.setFloat(2, progress);
-      shader.setFloat(3, type.index.toDouble());
-      shader.setFloat(4, noiseWeight);
-      shader.setFloat(5, time);
-
-      onApply?.call(shader, progress, time);
-
-      final maskPaint = ui.Paint()
-        ..shader = shader
-        ..blendMode = ui.BlendMode.dstOut;
-
-      final rect = ui.Rect.fromLTWH(
-        visualOffset.x + visualAnchor.x,
-        visualOffset.y + visualAnchor.y,
-        effectiveSize.x,
-        effectiveSize.y,
-      );
-
-      // --- DEBUG VISUALIZER ---
-      if (component.debugMode) {
-        final debugPaint = ui.Paint()
-          ..color = const ui.Color(0xFFFF0000)
-          ..style = ui.PaintingStyle.stroke
-          ..strokeWidth = 2.0;
-        canvas.drawRect(rect, debugPaint);
-      }
-      // ------------------------
-
-      // Capture the component's render in a layer, then apply the dissolve mask.
-      // Using a bounded rect is faster than saveLayer(null).
-      canvas.saveLayer(rect, ui.Paint());
+    if (!game.isLoaded) {
       draw(canvas);
-      canvas.drawRect(rect, maskPaint);
-      canvas.restore();
-    } catch (e) {
-      draw(canvas);
+      return;
     }
+
+    if (effectiveSize.x <= 0 || effectiveSize.y <= 0) {
+      draw(canvas);
+      return;
+    }
+
+    // UV TRANSFORM — no saveLayer needed.
+    //
+    // FlutterFragCoord() returns logical pixel coordinates in GAME CANVAS space
+    // (from the top-left of the GameWidget, before any canvas transforms).
+    //
+    // Strategy: instead of inverting canvas.getTransform() (which is unreliable
+    // on web/CanvasKit), we compute the component's screen top-left directly from
+    // Flame's camera and build the UV matrix analytically.
+    //
+    //   uv.x = (fragX - screenTL.x) * scaleX + srcLeft/imgW
+    //   scaleX = srcW / (imgW * screenW)   where screenW = w * zoom
+    //
+    // This is a pure scale+translate — no inversion, no precision loss.
+
+    final w = effectiveSize.x + calibrationOffset.x;
+    final h = effectiveSize.y + calibrationOffset.y;
+    final imgW = image.width.toDouble();
+    final imgH = image.height.toDouble();
+
+    final zoom = game.camera.viewfinder.zoom;
+    final camPos = game.camera.viewfinder.position;
+    // Component top-left in world space (accounts for anchor)
+    final anchorVec = component.anchor.toVector2();
+    final worldTL =
+        component.absolutePosition -
+        Vector2(anchorVec.x * effectiveSize.x, anchorVec.y * effectiveSize.y);
+    // World → game-canvas logical pixels.
+    // viewport.position gives the canvas offset of the viewport top-left.
+    final viewportTL = game.camera.viewport.position;
+    final screenTLx =
+        (worldTL.x - camPos.x) * zoom +
+        game.camera.viewport.size.x * 0.5 +
+        viewportTL.x;
+    final screenTLy =
+        (worldTL.y - camPos.y) * zoom +
+        game.camera.viewport.size.y * 0.5 +
+        viewportTL.y;
+
+    // Screen width/height of the component (in logical pixels).
+    final screenW = w * zoom;
+    final screenH = h * zoom;
+
+    // Affine matrix: fragCoord → image texcoord.
+    //   col0=[scaleX,0,0,0], col1=[0,scaleY,0,0], col2=[0,0,1,0],
+    //   col3=[transX,transY,0,1]  (column-major, matches GLSL mat4 layout)
+    final scaleX = sourceRect.width / (imgW * screenW);
+    final scaleY = sourceRect.height / (imgH * screenH);
+    final transX = -screenTLx * scaleX + sourceRect.left / imgW;
+    final transY = -screenTLy * scaleY + sourceRect.top / imgH;
+
+    final mat = v64.Matrix4.zero();
+    mat.setEntry(0, 0, scaleX);
+    mat.setEntry(1, 1, scaleY);
+    mat.setEntry(2, 2, 1.0);
+    mat.setEntry(3, 3, 1.0);
+    mat.setEntry(0, 3, transX);
+    mat.setEntry(1, 3, transY);
+
+    // Matrix takes slots 0-15
+    for (var i = 0; i < 16; i++) {
+      shader.setFloat(i, mat.storage[i]);
+    }
+
+    // uSize at 16, 17
+    shader.setFloat(16, w);
+    shader.setFloat(17, h);
+
+    // params: progress(18), type(19), noise(20), time(21)
+    shader.setFloat(18, progress);
+    shader.setFloat(19, type.index.toDouble());
+    shader.setFloat(20, noiseWeight);
+    shader.setFloat(21, time);
+
+    shader.setImageSampler(0, image);
+
+    onApply?.call(shader, progress, time);
+
+    final paint = ui.Paint()..shader = shader;
+
+    // We draw the RECT that corresponds to the component's visual bounds.
+    // Since we are NOT calling draw(canvas), this MUST be visually identical
+    // to the sprite's content if progress were 0.
+    canvas.drawRect(
+      ui.Rect.fromLTWH(0, 0, effectiveSize.x, effectiveSize.y),
+      paint,
+    );
   }
 }

@@ -24,11 +24,11 @@ flutter:
   assets:
     - assets/images/animations/ember.png
     - assets/images/animations/bomb_ptero.png
-  shaders:
-    - assets/shaders/shader_outline.frag
-    - assets/shaders/dissolve.frag
-    - assets/shaders/dissolve_grid.frag
-    - assets/shaders/dissolve_slice.frag
-    - assets/shaders/dissolve_wave.frag
-    - assets/shaders/dissolve_shatter.frag
-    - assets/shaders/dissolve_clip.frag
+  # shaders:
+  #   - assets/shaders/shader_outline.frag
+  #   - assets/shaders/dissolve.frag
+  #   - assets/shaders/dissolve_grid.frag
+  #   - assets/shaders/dissolve_slice.frag
+  #   - assets/shaders/dissolve_wave.frag
+  #   - assets/shaders/dissolve_shatter.frag
+  #   - assets/shaders/dissolve_clip.frag

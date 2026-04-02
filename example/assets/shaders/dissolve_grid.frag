@@ -3,6 +3,8 @@
 
 precision mediump float;
 
+uniform sampler2D uTexture;
+uniform vec4 uWorldToUV[4];
 uniform vec2 uSize;
 uniform float uThreshold;
 uniform float uType;
@@ -17,8 +19,10 @@ float rand(vec2 co) {
 }
 
 void main() {
-    // FragCoord is local in saveLayer context
-    vec2 uv = FlutterFragCoord().xy / uSize;
+    mat4 m = mat4(uWorldToUV[0], uWorldToUV[1], uWorldToUV[2], uWorldToUV[3]);
+    vec4 localPos = m * vec4(FlutterFragCoord().xy, 0.0, 1.0);
+    // Perspective divide: mat4 translate sets w=1, but be safe.
+    vec2 uv = localPos.xy / localPos.w;
     
     if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) {
         fragColor = vec4(0.0);
@@ -55,8 +59,10 @@ void main() {
 
     float alpha = smoothstep(uThreshold - 0.02, uThreshold + 0.02, threshold);
 
-    // For dstOut blending: Alpha 1.0 means ERASE, 0.0 means keep.
+    // Sample the actual texture
+    vec4 texColor = texture(uTexture, uv);
+
     // Prevent optimization of uTime
-    float dummy = uTime * 0.0;
-    fragColor = vec4(0.0, 0.0, 0.0, alpha + dummy);
+    float dummy = (uTime + uSize.x + uSize.y) * 0.0;
+    fragColor = vec4(texColor.rgb, texColor.a * (1.0 - alpha) + dummy);
 }

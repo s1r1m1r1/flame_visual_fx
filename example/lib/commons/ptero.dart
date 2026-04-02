@@ -216,9 +216,15 @@ class Ptero<T extends FlameGame> extends SpriteAnimationComponent
 
     // Shader Dissolve
     final shaderDiss = dec.find<ShaderDissolveDecorator>();
-    if (shaderDiss != null && shaderDiss.autoAnimate) {
-      // ONLY animate if autoAnimate is true in the DECORATOR itself.
-      shaderDiss.progress = (gameTime * 0.25) % 1.2;
+    if (shaderDiss != null) {
+      final sprite = animationTicker!.getSprite();
+      shaderDiss.image = sprite.image;
+      shaderDiss.sourceRect = sprite.src;
+
+      if (shaderDiss.autoAnimate) {
+        // ONLY animate if autoAnimate is true in the DECORATOR itself.
+        shaderDiss.progress = (gameTime * 0.25) % 1.2;
+      }
     }
 
     // Polygon Parameters

@@ -4,6 +4,15 @@ import 'package:flame/components.dart';
 import 'package:flame/rendering.dart';
 import 'vfx_decorator.dart';
 
+/// The pattern to use for the outline.
+enum OutlinePattern {
+  /// A smooth circular outline (uses many samples).
+  eightDirection,
+
+  /// A diamond-shaped outline (uses only 4 samples: top, bottom, left, right).
+  fourDirection,
+}
+
 /// A [Decorator] that applies an outline to the component using native saveLayer tinting.
 /// This sidesteps all WebGL and Transform Matrix rounding errors, natively tracking camera
 /// limits and asset bounds securely.
@@ -12,9 +21,10 @@ class OutlineDecorator extends VFXDecorator {
     required this.component,
     this.vertices,
     this.color = const ui.Color.fromARGB(255, 253, 6, 138),
-    this.thickness = 2.0,
+    this.thickness = 1.0,
     this.margin = 0.0,
     this.isActive = true,
+    this.pattern = OutlinePattern.fourDirection,
     this.cacheKey,
   });
 
@@ -24,6 +34,7 @@ class OutlineDecorator extends VFXDecorator {
   double thickness;
   double margin;
   bool isActive;
+  OutlinePattern pattern;
 
   /// Optional key to cache the rendered silhouette globally as a GPU texture.
   /// This provides near-zero overhead for repeated renders (e.g. 500 birds).
@@ -53,7 +64,8 @@ class OutlineDecorator extends VFXDecorator {
   ui.Color? _lastColor;
   double? _lastThickness;
 
-  final ui.Paint _imagePaint = ui.Paint();
+  final ui.Paint _imagePaint = ui.Paint()
+    ..filterQuality = ui.FilterQuality.none;
 
   @override
   void update(double dt) {
@@ -73,9 +85,9 @@ class OutlineDecorator extends VFXDecorator {
 
     // --- ULTRA FAST PATH: Global Bitmap (Image) Cache ---
     if (cacheKey != null) {
-      // We append thickness to the key because a 2px outline and 5px outline
-      // require different "baked" silhouettes.
-      final Object effectiveKey = '${cacheKey}_$thickness';
+      // We append thickness and pattern to the key because different
+      // thicknesses and patterns require different "baked" silhouettes.
+      final Object effectiveKey = '${cacheKey}_${thickness}_${pattern.index}';
       final cachedImage = _globalImageCache[effectiveKey];
       if (cachedImage != null) {
         _imagePaint.colorFilter = ui.ColorFilter.mode(
@@ -84,8 +96,17 @@ class OutlineDecorator extends VFXDecorator {
         );
 
         // Draw the baked outline silhouette FIRST (behind)
+        // Use floor() to avoid sub-pixel interpolation on the cached bitmap
+        // Draw the baked outline silhouette FIRST (behind)
+        // Use floor() to avoid sub-pixel interpolation on the cached bitmap
+        final double mX = this.component.size.x * 0.5;
+        final double mY = this.component.size.y * 1.5;
         final double pad = thickness;
-        canvas.drawImage(cachedImage, ui.Offset(-pad, -pad), _imagePaint);
+        canvas.drawImage(
+          cachedImage,
+          ui.Offset(-(mX + pad).floorToDouble(), -(mY + pad).floorToDouble()),
+          _imagePaint,
+        );
 
         // Draw the component LAST (on top)
         draw(canvas);
@@ -168,16 +189,32 @@ class OutlineDecorator extends VFXDecorator {
 
       canvas.saveLayer(null, outlinePaint);
 
-      // Use a circular distribution to ensure a perfectly smooth
-      // thick outline without gaps or "delamination".
-      // We scale samples with thickness to maintain density.
-      final int samples = max(16, (thickness * 2 * pi / 4).ceil());
-      for (int i = 0; i < samples; i++) {
-        final double angle = (i * 2 * pi) / samples;
-        canvas.save();
-        canvas.translate(cos(angle) * thickness, sin(angle) * thickness);
-        canvas.drawPicture(picture);
-        canvas.restore();
+      if (pattern == OutlinePattern.fourDirection) {
+        // Direct diamond pattern (Top, Bottom, Left, Right)
+        final List<ui.Offset> offsets = [
+          ui.Offset(0, -thickness),
+          ui.Offset(0, thickness),
+          ui.Offset(-thickness, 0),
+          ui.Offset(thickness, 0),
+        ];
+        for (final offset in offsets) {
+          canvas.save();
+          canvas.translate(offset.dx, offset.dy);
+          canvas.drawPicture(picture);
+          canvas.restore();
+        }
+      } else {
+        // Use a circular distribution to ensure a perfectly smooth
+        // thick outline without gaps or "delamination".
+        // We scale samples with thickness to maintain density.
+        final int samples = max(16, (thickness * 2 * pi / 4).ceil());
+        for (int i = 0; i < samples; i++) {
+          final double angle = (i * 2 * pi) / samples;
+          canvas.save();
+          canvas.translate(cos(angle) * thickness, sin(angle) * thickness);
+          canvas.drawPicture(picture);
+          canvas.restore();
+        }
       }
 
       canvas.restore();
@@ -193,21 +230,27 @@ class OutlineDecorator extends VFXDecorator {
 
   /// Asynchronously bakes the component's silhouette into a GPU texture.
   void _bakeSilhouette(void Function(ui.Canvas) draw, Object key) {
-    // Append thickness to ensure we bake the correct stroke width
-    final Object effectiveKey = '${key}_$thickness';
+    // Append thickness and pattern to ensure we bake the correct stroke width
+    final Object effectiveKey = '${key}_${thickness}_${pattern.index}';
     if (_pendingBakes.contains(effectiveKey)) return;
     _pendingBakes.add(effectiveKey);
 
     // We need to know the size to capture.
     // PositionComponent doesn't strictly define draw bounds, but component.size
     // is usually the safest bet for sprites.
+    /// We capture a generous area around the component center to account for
+    /// animations that may extend beyond the formal `component.size` (e.g. jumps).
     final double w = component.size.x;
     final double h = component.size.y;
 
-    // Add padding for thickness
+    // We use a 3x vertical multiplier for height to safely capture jumping frames.
+    // This is safer than relying on component.scale which is not yet applied here.
+    final double marginX = w * 0.5;
+    final double marginY = h * 1.5;
+
     final double pad = thickness;
-    final int imgW = (w + pad * 2).ceil();
-    final int imgH = (h + pad * 2).ceil();
+    final int imgW = (w + marginX * 2 + pad * 2).ceil();
+    final int imgH = (h + marginY * 2 + pad * 2).ceil();
 
     if (imgW <= 0 || imgH <= 0) {
       _pendingBakes.remove(effectiveKey);
@@ -218,7 +261,7 @@ class OutlineDecorator extends VFXDecorator {
     final canvas = ui.Canvas(recorder);
 
     // Translate to center the capture
-    canvas.translate(pad, pad);
+    canvas.translate(marginX + pad, marginY + pad);
 
     // We bake a WHITE silhouette. This allows us to tint it to ANY color
     // using ColorFilter.mode(color, BlendMode.srcIn) during drawImage.
@@ -236,13 +279,28 @@ class OutlineDecorator extends VFXDecorator {
     draw(canvasInner);
     final ui.Picture pictureInner = recorderInner.endRecording();
 
-    const int samples = 16;
-    for (int i = 0; i < samples; i++) {
-      final double angle = (i * 2 * pi) / samples;
-      canvas.save();
-      canvas.translate(cos(angle) * thickness, sin(angle) * thickness);
-      canvas.drawPicture(pictureInner);
-      canvas.restore();
+    if (pattern == OutlinePattern.fourDirection) {
+      final List<ui.Offset> offsets = [
+        ui.Offset(0, -thickness),
+        ui.Offset(0, thickness),
+        ui.Offset(-thickness, 0),
+        ui.Offset(thickness, 0),
+      ];
+      for (final offset in offsets) {
+        canvas.save();
+        canvas.translate(offset.dx, offset.dy);
+        canvas.drawPicture(pictureInner);
+        canvas.restore();
+      }
+    } else {
+      const int samples = 16;
+      for (int i = 0; i < samples; i++) {
+        final double angle = (i * 2 * pi) / samples;
+        canvas.save();
+        canvas.translate(cos(angle) * thickness, sin(angle) * thickness);
+        canvas.drawPicture(pictureInner);
+        canvas.restore();
+      }
     }
 
     canvas.restore(); // Restore saveLayer (tinting)

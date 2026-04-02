@@ -3,6 +3,8 @@
 
 precision mediump float;
 
+uniform sampler2D uTexture;
+uniform vec4 uWorldToUV[4];
 uniform vec2 uSize;
 uniform float uThreshold;
 uniform float uType;
@@ -43,7 +45,9 @@ vec3 voronoi(vec2 x) {
 }
 
 void main() {
-    vec2 uv = FlutterFragCoord().xy / uSize;
+    mat4 m = mat4(uWorldToUV[0], uWorldToUV[1], uWorldToUV[2], uWorldToUV[3]);
+    vec4 localPos = m * vec4(FlutterFragCoord().xy, 0.0, 1.0);
+    vec2 uv = localPos.xy;
     
     if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) {
         fragColor = vec4(0.0);
@@ -73,7 +77,10 @@ void main() {
     
     float alpha = smoothstep(uThreshold - 0.02, uThreshold + 0.02, thresholdValue);
     
-    // Alpha 1.0 means ERASE in dstOut mode
+    // Sample texture
+    vec4 texColor = texture(uTexture, uv);
+
+    // Alpha 1.0 means ERASE
     float dummy = (uTime + uSize.x + uSize.y + uSmoothness) * 0.0;
-    fragColor = vec4(0.0, 0.0, 0.0, alpha + dummy);
+    fragColor = vec4(texColor.rgb, texColor.a * (1.0 - alpha) + dummy);
 }

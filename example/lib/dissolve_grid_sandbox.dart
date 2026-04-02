@@ -228,14 +228,16 @@ class DissolveGridGame extends FlameGame with PanDetector {
     decorator = ShaderDissolveDecorator(
       shader: program.fragmentShader(),
       component: ptero,
+      image: ptero.animationTicker!.getSprite().image,
+      sourceRect: ptero.animationTicker!.getSprite().src,
       progress: threshold,
       noiseWeight: noiseWeight,
       type: DissolveType.values[typeIndex],
       autoAnimate: true,
       calibrationOffset: Vector2(calibrateX, calibrateY),
       onApply: (s, p, t) {
-        // uSize(0,1), progress(2), type(3), noise(4), time(5), gridSize(6)
-        s.setFloat(6, gridSize);
+        // Matrix(0..15), Size(16,17), progress(18), type(19), noise(20), time(21)
+        s.setFloat(22, gridSize);
       },
     );
     ptero.decorator.addLast(decorator!);
@@ -243,12 +245,14 @@ class DissolveGridGame extends FlameGame with PanDetector {
       ShaderDissolveDecorator(
         shader: program.fragmentShader(),
         component: ptero2,
+        image: ptero2.animationTicker!.getSprite().image,
+        sourceRect: ptero2.animationTicker!.getSprite().src,
         progress: threshold,
         noiseWeight: noiseWeight,
         type: DissolveType.values[typeIndex],
         autoAnimate: true,
         calibrationOffset: Vector2(calibrateX, calibrateY),
-        onApply: (s, p, t) => s.setFloat(6, gridSize),
+        onApply: (s, p, t) => s.setFloat(22, gridSize),
       ),
     );
 
@@ -280,8 +284,8 @@ class DissolveGridGame extends FlameGame with PanDetector {
         d.noiseWeight = noiseWeight;
         d.type = DissolveType.values[typeIndex];
         d.calibrationOffset = Vector2(calibrateX, calibrateY);
-        // Special Grid uniform at offset 6
-        d.onApply = (s, p, t) => s.setFloat(6, gridSize);
+        // Matrix(0..15), Size(16,17), progress(18), type(19), noise(20), time(21), gridSize(22)
+        d.onApply = (s, p, t) => s.setFloat(22, gridSize);
       }
       p.debugMode = showDebug;
     }

@@ -79,6 +79,8 @@ class DissolveBenchmark extends FlameGame {
           ShaderDissolveDecorator(
             shader: dissolveProgram.fragmentShader(),
             component: p,
+            image: p.animationTicker!.getSprite().image,
+            sourceRect: p.animationTicker!.getSprite().src,
             type: DissolveType.random,
             noiseWeight: 0.5,
           ),
@@ -90,6 +92,8 @@ class DissolveBenchmark extends FlameGame {
           ShaderDissolveDecorator(
             shader: dissolveGridProgram.fragmentShader(),
             component: p,
+            image: p.animationTicker!.getSprite().image,
+            sourceRect: p.animationTicker!.getSprite().src,
             onApply: (s, p, t) => s.setFloat(22, 15.0),
           ),
         ),
@@ -100,6 +104,8 @@ class DissolveBenchmark extends FlameGame {
           ShaderDissolveDecorator(
             shader: dissolveSliceProgram.fragmentShader(),
             component: p,
+            image: p.animationTicker!.getSprite().image,
+            sourceRect: p.animationTicker!.getSprite().src,
             onApply: (s, p, t) {
               s.setFloat(22, 15.0);
               s.setFloat(23, 5.0);
@@ -113,9 +119,11 @@ class DissolveBenchmark extends FlameGame {
           ShaderDissolveDecorator(
             shader: dissolveWaveProgram.fragmentShader(),
             component: p,
+            image: p.animationTicker!.getSprite().image,
+            sourceRect: p.animationTicker!.getSprite().src,
             onApply: (s, p, t) {
-              s.setFloat(8, 8.0);
-              s.setFloat(9, 3.0);
+              s.setFloat(22, 8.0);
+              s.setFloat(23, 3.0);
             },
           ),
         ),
@@ -126,6 +134,8 @@ class DissolveBenchmark extends FlameGame {
           ShaderDissolveDecorator(
             shader: dissolveShatterProgram.fragmentShader(),
             component: p,
+            image: p.animationTicker!.getSprite().image,
+            sourceRect: p.animationTicker!.getSprite().src,
             onApply: (s, p, t) => s.setFloat(22, 10.0),
           ),
         ),
@@ -136,7 +146,9 @@ class DissolveBenchmark extends FlameGame {
           ShaderDissolveDecorator(
             shader: dissolveClipProgram.fragmentShader(),
             component: p,
-            onApply: (s, p, t) => s.setFloat(8, 15.0),
+            image: p.animationTicker!.getSprite().image,
+            sourceRect: p.animationTicker!.getSprite().src,
+            onApply: (s, p, t) => s.setFloat(22, 15.0),
           ),
         ),
       ),

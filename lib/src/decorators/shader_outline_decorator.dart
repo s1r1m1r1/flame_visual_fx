@@ -8,6 +8,7 @@ import 'vfx_decorator.dart';
 /// which is more efficient than the traditional multi-offset Canvas approach.
 ///
 /// Use [ShaderOutlineDecorator] for high-performance outlines on complex components.
+@Deprecated('This is not working as expected')
 class ShaderOutlineDecorator extends VFXDecorator {
   ShaderOutlineDecorator({
     required this.shader,

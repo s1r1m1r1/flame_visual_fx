@@ -119,6 +119,8 @@ class DecoratorExample extends FlameGame {
         factory: (Ptero e) => ShaderDissolveDecorator(
           shader: dissolveProgram.fragmentShader(),
           component: e,
+          image: e.animationTicker!.getSprite().image,
+          sourceRect: e.animationTicker!.getSprite().src,
           noiseWeight: 1.0,
           progress: 0.5,
         ),
@@ -137,6 +139,8 @@ class DecoratorExample extends FlameGame {
         factory: (Ptero e) => ShaderDissolveDecorator(
           shader: dissolveGridProgram.fragmentShader(),
           component: e,
+          image: e.animationTicker!.getSprite().image,
+          sourceRect: e.animationTicker!.getSprite().src,
           progress: 0.5,
           onApply: (s, p, t) =>
               s.setFloat(22, 4.0), // grid size shift to 22 (after 16+2+4)
@@ -155,6 +159,8 @@ class DecoratorExample extends FlameGame {
         factory: (Ptero e) => ShaderDissolveDecorator(
           shader: dissolveSliceProgram.fragmentShader(),
           component: e,
+          image: e.animationTicker!.getSprite().image,
+          sourceRect: e.animationTicker!.getSprite().src,
           onApply: (s, p, t) {
             s.setFloat(22, 8.0); // 8 slices instead of 10
             s.setFloat(23, 0.0); // uDirection (horizontal)
@@ -173,6 +179,8 @@ class DecoratorExample extends FlameGame {
         factory: (Ptero e) => ShaderDissolveDecorator(
           shader: dissolveWaveProgram.fragmentShader(),
           component: e,
+          image: e.animationTicker!.getSprite().image,
+          sourceRect: e.animationTicker!.getSprite().src,
           onApply: (s, p, t) {
             s.setFloat(22, 8.0); // uAmplitude
             s.setFloat(23, 3.0); // uFrequency
@@ -191,8 +199,10 @@ class DecoratorExample extends FlameGame {
         factory: (Ptero e) => ShaderDissolveDecorator(
           shader: dissolveShatterProgram.fragmentShader(),
           component: e,
+          image: e.animationTicker!.getSprite().image,
+          sourceRect: e.animationTicker!.getSprite().src,
           onApply: (s, p, t) {
-            s.setFloat(8, 10.0); // uGridSize
+            s.setFloat(22, 10.0); // uGridSize shift to 22
           },
         ),
         onTap: (dec) {
@@ -208,6 +218,8 @@ class DecoratorExample extends FlameGame {
         factory: (Ptero e) => ShaderDissolveDecorator(
           shader: dissolveClipProgram.fragmentShader(),
           component: e,
+          image: e.animationTicker!.getSprite().image,
+          sourceRect: e.animationTicker!.getSprite().src,
           onApply: (s, p, t) => s.setFloat(22, 15.0), // uClipEdges shift to 22
         ),
         onTap: null,
