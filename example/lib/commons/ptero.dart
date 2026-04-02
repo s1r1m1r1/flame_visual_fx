@@ -192,9 +192,7 @@ class Ptero<T extends FlameGame> extends SpriteAnimationComponent
     final dec = decorator;
     final gameTime = game.currentTime();
 
-    // Pulse
     final pulse = (math.sin(gameTime * 6) + 1) / 2;
-    dec.find<PulseOutlineDecorator>()?.thickness = 2.0 + pulse * 4.0;
     dec.find<WaveDecorator>()?.phase = gameTime * 4.0;
 
     // Hologram

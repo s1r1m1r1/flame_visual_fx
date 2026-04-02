@@ -50,11 +50,6 @@ class DecoratorExample extends FlameGame {
     final decoratorData = [
       (name: 'Original', factory: (Ptero e) => null, onTap: null),
       (
-        name: 'Pulse Outline',
-        factory: (Ptero e) => PulseOutlineDecorator(component: e),
-        onTap: null,
-      ),
-      (
         name: 'Outline',
         factory: (Ptero e) => OutlineDecorator(component: e),
         onTap: null,
