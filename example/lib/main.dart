@@ -14,7 +14,6 @@ void main() {
 }
 
 class DecoratorExample extends FlameGame {
-  late ui.FragmentProgram outlineProgram;
   late ui.FragmentProgram dissolveProgram;
   late ui.FragmentProgram dissolveGridProgram;
   late ui.FragmentProgram dissolveSliceProgram;
@@ -27,9 +26,6 @@ class DecoratorExample extends FlameGame {
 
   @override
   Future<void> onLoad() async {
-    outlineProgram = await ui.FragmentProgram.fromAsset(
-      'assets/shaders/shader_outline.frag',
-    );
     dissolveProgram = await ui.FragmentProgram.fromAsset(
       'assets/shaders/dissolve.frag',
     );
@@ -69,16 +65,14 @@ class DecoratorExample extends FlameGame {
         onTap: null,
       ),
       (
-        name: 'Shader Outline\n(GPU Fast)',
-        factory: (Ptero e) => ShaderOutlineDecorator(
-          shader: outlineProgram.fragmentShader(),
-          component: e,
+        name: 'Pure Outline\n(Fast Canvas)',
+        factory: (Ptero e) => PureOutlineDecorator(
           thickness: 4.0,
+          color: const Color(0xFF00FFCC),
         ),
         onTap: (dec) {
-          if (dec is ShaderOutlineDecorator) {
+          if (dec is PureOutlineDecorator) {
             dec.thickness = dec.thickness == 4.0 ? 8.0 : 4.0;
-            dec.invalidate(); // Force rebake for new thickness
           }
         },
       ),

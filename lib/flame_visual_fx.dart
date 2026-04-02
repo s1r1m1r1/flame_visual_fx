@@ -33,5 +33,4 @@ export 'src/effects/color_filter_effect.dart';
 export 'src/effects/neon_glow_effect.dart';
 export 'src/effects/dissolve_effect.dart';
 export 'src/decorators/shader_dissolve_decorator.dart';
-export 'src/decorators/shader_outline_decorator.dart';
 export 'src/decorators/shader_hologram_decorator.dart';

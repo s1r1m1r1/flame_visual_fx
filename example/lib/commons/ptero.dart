@@ -267,11 +267,7 @@ class Ptero<T extends FlameGame> extends SpriteAnimationComponent
       }
     }
 
-    dec.find<ShaderOutlineDecorator>()
-      ?..cacheKey = (animationTicker?.currentIndex != null)
-          ? 'ptero_outline_${size.x}_${size.y}_${animationTicker!.currentIndex}'
-          : null
-      ..invalidate();
+    dec.find<PureOutlineDecorator>()?.thickness = 2.0;
 
     final neon = dec.find<NeonGlowDecorator>();
     if (neon != null) {

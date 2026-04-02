@@ -23,8 +23,6 @@ class OutlineBenchmark extends FlameGame {
   late final TextComponent counter;
   final Random random = Random();
 
-  late ui.FragmentProgram outlineProgram;
-
   int _currentEffectIndex = 0;
 
   final List<MapEntry<String, void Function(Ptero)?>> effects = [];
@@ -36,10 +34,6 @@ class OutlineBenchmark extends FlameGame {
 
   @override
   Future<void> onLoad() async {
-    outlineProgram = await ui.FragmentProgram.fromAsset(
-      'assets/shaders/shader_outline.frag',
-    );
-
     effects.addAll([
       const MapEntry('None (Original)', null),
       MapEntry(
@@ -53,12 +47,11 @@ class OutlineBenchmark extends FlameGame {
         ),
       ),
       MapEntry(
-        'Shader Outline Decorator (GPU)',
+        'Pure Outline Decorator (Canvas)',
         (Ptero p) => p.decorator.addLast(
-          ShaderOutlineDecorator(
-            shader: outlineProgram.fragmentShader(),
-            component: p,
+          PureOutlineDecorator(
             thickness: 3,
+            color: Colors.pink,
           ),
         ),
       ),
@@ -110,7 +103,6 @@ class OutlineBenchmark extends FlameGame {
   void _applyCurrentEffect() {
     world.removeAll(world.children.query<Ptero>());
     OutlineDecorator.clearCache();
-    ShaderOutlineDecorator.clearCache();
   }
 
   void addSprites(int count) {
@@ -160,7 +152,6 @@ class _OutlineBenchmarkScreenState extends State<OutlineBenchmarkScreen> {
       body: Stack(
         children: [
           GameWidget(game: game),
-          // Bottom Controls
           Positioned(
             bottom: 20,
             left: 20,
