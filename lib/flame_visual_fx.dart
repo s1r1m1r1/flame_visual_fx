@@ -32,3 +32,7 @@ export 'src/effects/neon_glow_effect.dart';
 export 'src/effects/dissolve_effect.dart';
 export 'src/decorators/shader_dissolve_decorator.dart';
 export 'src/decorators/shader_hologram_decorator.dart';
+export 'src/decorators/glitch_decorator.dart';
+export 'src/decorators/shader_ghost_trail_decorator.dart';
+export 'src/decorators/group_decorator.dart';
+export 'src/decorators/shader_outline_decorator.dart';

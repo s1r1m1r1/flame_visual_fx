@@ -28,3 +28,8 @@ dev_dependencies:
 flutter:
   shaders:
     - lib/src/shaders/hologram.frag
+    - lib/src/shaders/glitch.frag
+    - lib/src/shaders/ghost_trail.frag
+    - lib/src/shaders/outline.frag
+    - lib/src/shaders/dissolve.frag
+    - lib/src/shaders/pixel_dissolve.frag

@@ -1,12 +1,14 @@
 import 'dart:math';
 import 'dart:ui' as ui;
+import 'package:flutter/painting.dart';
 import 'package:flame/rendering.dart';
+import 'package:composite_atlas/composite_atlas.dart';
 import 'outline_decorator.dart'; // To reuse OutlinePattern
 
 /// A lightweight, component-free decorator that applies an outline to drawing commands.
 /// Unlike [OutlineDecorator], this does not require a [PositionComponent] and avoids
 /// excessive performance or memory padding, making it ideal for texture atlas baking.
-class PureOutlineDecorator extends Decorator {
+class PureOutlineDecorator extends Decorator implements BakePadding {
   PureOutlineDecorator({
     this.color = const ui.Color.fromARGB(255, 253, 6, 138),
     this.thickness = 1.0,
@@ -20,8 +22,18 @@ class PureOutlineDecorator extends Decorator {
   OutlinePattern pattern;
 
   @override
+  EdgeInsets get padding =>
+      isActive ? EdgeInsets.all(thickness) : EdgeInsets.zero;
+
+  @override
   void apply(void Function(ui.Canvas) draw, ui.Canvas canvas) {
-    if (!isActive || thickness <= 0) {
+    if (!isActive) {
+      draw(canvas);
+      return;
+    }
+
+    final double effectiveThickness = thickness;
+    if (effectiveThickness <= 0) {
       draw(canvas);
       return;
     }
@@ -45,10 +57,10 @@ class PureOutlineDecorator extends Decorator {
       if (pattern == OutlinePattern.fourDirection) {
         // Diamond pattern
         final List<ui.Offset> offsets = [
-          ui.Offset(0, -thickness),
-          ui.Offset(0, thickness),
-          ui.Offset(-thickness, 0),
-          ui.Offset(thickness, 0),
+          ui.Offset(0, -effectiveThickness),
+          ui.Offset(0, effectiveThickness),
+          ui.Offset(-effectiveThickness, 0),
+          ui.Offset(effectiveThickness, 0),
         ];
         for (final offset in offsets) {
           canvas.save();
@@ -58,11 +70,14 @@ class PureOutlineDecorator extends Decorator {
         }
       } else {
         // 8-direction or smooth circular pattern
-        final int samples = max(8, (thickness * 2 * pi).ceil());
+        final int samples = max(8, (effectiveThickness * 2 * pi).ceil());
         for (int i = 0; i < samples; i++) {
           final double angle = (i * 2 * pi) / samples;
           canvas.save();
-          canvas.translate(cos(angle) * thickness, sin(angle) * thickness);
+          canvas.translate(
+            cos(angle) * effectiveThickness,
+            sin(angle) * effectiveThickness,
+          );
           canvas.drawPicture(picture);
           canvas.restore();
         }

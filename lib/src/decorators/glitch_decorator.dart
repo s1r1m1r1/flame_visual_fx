@@ -2,10 +2,10 @@ import 'dart:ui' as ui;
 import 'package:flame/rendering.dart';
 import 'package:composite_atlas/composite_atlas.dart';
 
-/// A decorator that applies a holographic shader effect.
-/// Designed for use with [CompositeAtlas] baking to pre-render shader effects
+/// A decorator that applies a glitch shader effect (RGB split, jitter).
+/// Designed for use with [CompositeAtlas] baking to pre-render glitch effects
 /// into static textures, saving runtime GPU costs.
-class ShaderHologramDecorator extends Decorator implements AtlasDecorator {
+class GlitchDecorator extends Decorator implements AtlasDecorator {
   final ui.FragmentShader shader;
   double time;
 
@@ -15,7 +15,7 @@ class ShaderHologramDecorator extends Decorator implements AtlasDecorator {
   ui.Size? _atlasSize;
   ui.Size? _localSize;
 
-  ShaderHologramDecorator({required this.shader, this.time = 0.0});
+  GlitchDecorator({required this.shader, this.time = 0.0});
 
   @override
   void updateAtlasContext(AtlasContext context) {
@@ -32,14 +32,11 @@ class ShaderHologramDecorator extends Decorator implements AtlasDecorator {
 
   /// Loader method to handle shader loading from the visual_fx package.
   /// This should be called before start of the baking process.
-  static Future<ShaderHologramDecorator> load({double time = 0.0}) async {
+  static Future<GlitchDecorator> load({double time = 0.0}) async {
     final program = await ui.FragmentProgram.fromAsset(
-      'packages/flame_visual_fx/lib/src/shaders/hologram.frag',
+      'packages/flame_visual_fx/lib/src/shaders/glitch.frag',
     );
-    return ShaderHologramDecorator(
-      shader: program.fragmentShader(),
-      time: time,
-    );
+    return GlitchDecorator(shader: program.fragmentShader(), time: time);
   }
 
   @override
@@ -83,10 +80,10 @@ class ShaderHologramDecorator extends Decorator implements AtlasDecorator {
     // During baking, drawRect should match the area occupied by the sprite
     // including the margin.
     final drawRect = ui.Rect.fromLTWH(
-      margin,
-      margin,
-      _srcRect!.width,
-      _srcRect!.height,
+      0, // Start from 0 to allows some overflow if needed (glitch displacement)
+      0,
+      _srcRect!.width + margin * 2,
+      _srcRect!.height + margin * 2,
     );
 
     canvas.drawRect(drawRect, paint);
@@ -95,7 +92,7 @@ class ShaderHologramDecorator extends Decorator implements AtlasDecorator {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is ShaderHologramDecorator && runtimeType == other.runtimeType;
+      other is GlitchDecorator && runtimeType == other.runtimeType;
 
   @override
   int get hashCode => runtimeType.hashCode;

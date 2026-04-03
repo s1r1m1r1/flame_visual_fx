@@ -42,8 +42,9 @@ void main() {
     // Cyan base
     vec3 hologramColor = vec3(0.0, 0.8, 1.0);
     
-    // Add some scanlines (static for now to ensure analyze reads them)
-    float scanline = sin(localPos.y * 1.5) * 0.1 + 0.9;
+    // Add some scanlines (animated via uTime)
+    // 6.28318 is 2 * PI, so uTime from 0 to 1 creates a perfect loop
+    float scanline = sin(localPos.y * 1.5 + uTime * 6.28318) * 0.1 + 0.9;
     
     // Mix original details with hologram color
     vec3 finalRGB = mix(hologramColor, vec3(1.0), gray * 0.5) * scanline;

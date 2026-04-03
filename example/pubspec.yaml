@@ -13,6 +13,8 @@ dependencies:
     sdk: flutter
   flame: any
   flame_visual_fx: any
+  composite_atlas:
+    path: ../../composite_atlas
 
 dev_dependencies:
   flutter_test:

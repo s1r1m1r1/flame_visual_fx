@@ -4,6 +4,7 @@ import 'dart:ui' as ui;
 import 'package:flame/components.dart';
 import 'package:flame/game.dart';
 import 'package:flame_visual_fx/flame_visual_fx.dart';
+import 'package:composite_atlas/composite_atlas.dart';
 import 'package:flutter/material.dart' hide Image;
 import 'commons/ptero.dart';
 
@@ -24,6 +25,8 @@ class OutlineBenchmark extends FlameGame {
   final Random random = Random();
 
   int _currentEffectIndex = 0;
+  SpriteAnimation? _bakedAnimation;
+  SpriteAnimation? _defaultAnimation;
 
   final List<MapEntry<String, void Function(Ptero)?>> effects = [];
 
@@ -49,10 +52,7 @@ class OutlineBenchmark extends FlameGame {
       MapEntry(
         'Pure Outline Decorator (Canvas)',
         (Ptero p) => p.decorator.addLast(
-          PureOutlineDecorator(
-            thickness: 3,
-            color: Colors.pink,
-          ),
+          PureOutlineDecorator(thickness: 3, color: Colors.pink),
         ),
       ),
       MapEntry(
@@ -64,7 +64,14 @@ class OutlineBenchmark extends FlameGame {
           ),
         ),
       ),
+      MapEntry('Baked Shader Outline (Atlas)', (Ptero p) {
+        if (_bakedAnimation != null) {
+          p.animation = _bakedAnimation;
+        }
+      }),
     ]);
+
+    await _initBakedAtlas();
 
     camera.viewfinder.anchor = Anchor.center;
 
@@ -105,6 +112,43 @@ class OutlineBenchmark extends FlameGame {
     OutlineDecorator.clearCache();
   }
 
+  Future<void> _initBakedAtlas() async {
+    // 1. Load the original animation to use its sprites
+    _defaultAnimation = await loadSpriteAnimation(
+      'animations/bomb_ptero.png',
+      SpriteAnimationData.sequenced(
+        amount: 4,
+        textureSize: Vector2(48, 32),
+        stepTime: 0.15,
+      ),
+    );
+
+    // 2. Prepare the shader outline
+    final outline = await ShaderOutlineDecorator.load(
+      color: Colors.red,
+      thickness: 3.0,
+    );
+
+    // 3. Bake into a CompositeAtlas
+    final atlas = await CompositeAtlas.bake([
+      // We can't pass the animation directly to bake,
+      // but we can pass SpriteBakeRequest for each frame!
+      ..._defaultAnimation!.frames.asMap().entries.map((e) {
+        return SpriteBakeRequest(
+          e.value.sprite,
+          name: 'ptero_${e.key}',
+          decorator: outline,
+        );
+      }),
+    ]);
+
+    // 4. Extract the baked animation
+    _bakedAnimation = SpriteAnimation.spriteList(
+      List.generate(4, (i) => atlas.findSpriteByName('ptero_$i')!),
+      stepTime: 0.15,
+    );
+  }
+
   void addSprites(int count) {
     if (effects.isEmpty) return;
 
@@ -113,13 +157,16 @@ class OutlineBenchmark extends FlameGame {
 
     world.addAll(
       List.generate(count, (_) {
+        final isBaked = currentEffectName == 'Baked Shader Outline (Atlas)';
         final ptero = Ptero(
           size: pteroSize,
           position: Vector2(
             (random.nextDouble() - 0.5) * width,
             (random.nextDouble() - 0.5) * height,
           ),
+          animation: isBaked ? _bakedAnimation : _defaultAnimation,
         );
+
         effectApplier?.call(ptero);
         return ptero;
       }),

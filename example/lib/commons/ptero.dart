@@ -3,13 +3,12 @@ import 'dart:ui' as ui;
 import 'package:flame/components.dart';
 import 'package:flame/game.dart';
 import 'package:flame_visual_fx/flame_visual_fx.dart';
-import 'package:flame_unified_real_time/flame_unified_real_time.dart';
 
 class Ptero<T extends FlameGame> extends SpriteAnimationComponent
     with HasGameReference<T> {
   static final Map<String, Future<List<List<Vector2>>>> _contourCache = {};
 
-  Ptero({super.position, Vector2? size, super.priority, super.key})
+  Ptero({super.position, Vector2? size, super.priority, super.key, super.animation})
     : super(size: size ?? Vector2(150, 100), anchor: Anchor.center);
 
   List<List<Vector2>>? _allContours;
@@ -39,22 +38,24 @@ class Ptero<T extends FlameGame> extends SpriteAnimationComponent
 
   @override
   Future<void> onLoad() async {
-    final spriteAnimation = await game.loadSpriteAnimation(
-      'animations/bomb_ptero.png',
-      SpriteAnimationData.sequenced(
-        amount: 4,
-        textureSize: Vector2(48, 32),
-        stepTime: 0.15,
-      ),
-    );
-    animation = spriteAnimation;
+    if (animation == null) {
+      animation = await game.loadSpriteAnimation(
+        'animations/bomb_ptero.png',
+        SpriteAnimationData.sequenced(
+          amount: 4,
+          textureSize: Vector2(48, 32),
+          stepTime: 0.15,
+        ),
+      );
+    }
 
+    final anim = animation!;
     final cacheKey = 'bomb_ptero_${size.x.toInt()}_${size.y.toInt()}';
 
     // Use Future-based cache to avoid redundant processing
     _allContours = await _contourCache.putIfAbsent(cacheKey, () async {
       final List<List<Vector2>> contours = [];
-      for (final frame in spriteAnimation.frames) {
+      for (final frame in anim.frames) {
         final sprite = frame.sprite;
         final rawVertices = await ContourFinder.findContour(
           sprite.image,
