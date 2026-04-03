@@ -1,4 +1,5 @@
 import 'dart:ui' as ui;
+import 'package:flutter/painting.dart';
 import 'package:flame/rendering.dart';
 import 'package:composite_atlas/composite_atlas.dart';
 import 'package:flame/extensions.dart';
@@ -6,7 +7,7 @@ import 'package:flame/extensions.dart';
 /// A decorator that applies a "Ghost Trail" shader effect (afterimages).
 /// Designed for use with [CompositeAtlas] baking to pre-render motion blur effects
 /// into static textures, saving runtime GPU costs.
-class ShaderGhostTrailDecorator extends Decorator implements AtlasDecorator {
+class ShaderGhostTrailDecorator extends Decorator implements AtlasDecorator, BakePadding {
   final ui.FragmentShader shader;
 
   /// The main color of the ghost trail.
@@ -21,6 +22,10 @@ class ShaderGhostTrailDecorator extends Decorator implements AtlasDecorator {
   /// How much to tint the trail images with the specified [color] (0.0 to 1.0).
   double tintFactor;
 
+  /// The extra margin around the sprite to allow for the ghost trail.
+  /// Defaults to 10.0, which matches the standard shader expectations.
+  double margin;
+
   /// Transient time state used for looping animations during baking.
   double _time = 0.0;
 
@@ -29,6 +34,7 @@ class ShaderGhostTrailDecorator extends Decorator implements AtlasDecorator {
   ui.Rect? _srcRect;
   ui.Size? _atlasSize;
   ui.Size? _localSize;
+  EdgeInsets? _currentPadding;
 
   ShaderGhostTrailDecorator({
     required this.shader,
@@ -36,8 +42,12 @@ class ShaderGhostTrailDecorator extends Decorator implements AtlasDecorator {
     Vector2? direction,
     this.strength = 0.5,
     this.tintFactor = 0.5,
+    this.margin = 10.0,
     this.includeBase = true,
   }) : direction = direction ?? Vector2(0, 1.0); // Default downward trail
+
+  @override
+  EdgeInsets get padding => EdgeInsets.all(margin);
 
   /// If true, the base sprite will be drawn after the ghost trail.
   /// Set to false when layering multiple decorators to avoid duplicates.
@@ -49,6 +59,7 @@ class ShaderGhostTrailDecorator extends Decorator implements AtlasDecorator {
     _srcRect = context.srcRect;
     _atlasSize = context.atlasSize;
     _localSize = context.localSize;
+    _currentPadding = context.padding;
 
     // Use normalized time (0.0 to 1.0) based on frame index to ensure perfect looping
     final index = context.itemIndex ?? 0;
@@ -63,6 +74,7 @@ class ShaderGhostTrailDecorator extends Decorator implements AtlasDecorator {
     Vector2? direction,
     double strength = 0.2,
     double tintFactor = 0.5,
+    double margin = 10.0,
   }) async {
     final program = await ui.FragmentProgram.fromAsset(
       'packages/flame_visual_fx/lib/src/shaders/ghost_trail.frag',
@@ -73,6 +85,7 @@ class ShaderGhostTrailDecorator extends Decorator implements AtlasDecorator {
       direction: direction,
       strength: strength,
       tintFactor: tintFactor,
+      margin: margin,
     );
   }
 
@@ -85,8 +98,7 @@ class ShaderGhostTrailDecorator extends Decorator implements AtlasDecorator {
     }
 
     final localSize = _localSize ?? const ui.Size(0, 0);
-    // Standard margin used in CompositeAtlasImpl.analyze()
-    const double margin = 10.0;
+    final p = _currentPadding ?? EdgeInsets.all(margin);
 
     // 1. Set Uniforms
     // uSize (location 0)
@@ -104,8 +116,8 @@ class ShaderGhostTrailDecorator extends Decorator implements AtlasDecorator {
     shader.setFloat(7, _atlasSize!.height);
 
     // uOffset (location 3)
-    shader.setFloat(8, margin);
-    shader.setFloat(9, margin);
+    shader.setFloat(8, p.left);
+    shader.setFloat(9, p.top);
 
     // uTime (location 4)
     shader.setFloat(10, _time);
@@ -129,13 +141,13 @@ class ShaderGhostTrailDecorator extends Decorator implements AtlasDecorator {
     final paint = ui.Paint()..shader = shader;
 
     // During baking, drawRect should match the area occupied by the sprite
-    // including the margin. Note: We use a larger draw area to allow the trail
+    // including the padding. Note: We use a larger draw area to allow the trail
     // to extend beyond the original sprite bounds!
     final drawRect = ui.Rect.fromLTWH(
       0,
       0,
-      _srcRect!.width + margin * 2,
-      _srcRect!.height + margin * 2,
+      _srcRect!.width + p.horizontal,
+      _srcRect!.height + p.vertical,
     );
     // 1. Draw the ghost trail images
     canvas.drawRect(drawRect, paint);

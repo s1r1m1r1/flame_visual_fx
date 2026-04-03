@@ -1,11 +1,12 @@
 import 'dart:ui' as ui;
+import 'package:flutter/painting.dart';
 import 'package:flame/rendering.dart';
 import 'package:composite_atlas/composite_atlas.dart';
 
 /// A decorator that applies an outline shader effect.
 /// Highly optimized for [CompositeAtlas] baking.
 /// Can optionally sync its displacement with [GlitchDecorator].
-class ShaderOutlineDecorator extends Decorator implements AtlasDecorator {
+class ShaderOutlineDecorator extends Decorator implements AtlasDecorator, BakePadding {
   final ui.FragmentShader shader;
 
   /// The outline color.
@@ -13,6 +14,10 @@ class ShaderOutlineDecorator extends Decorator implements AtlasDecorator {
 
   /// The thickness of the outline in pixels.
   double thickness;
+
+  /// The extra margin around the sprite to allow for the outline.
+  /// Defaults to 10.0, which matches the standard shader expectations.
+  double margin;
 
   /// If true, the outline will jitter and jump in sync with [GlitchDecorator].
   bool useGlitch;
@@ -25,14 +30,19 @@ class ShaderOutlineDecorator extends Decorator implements AtlasDecorator {
   ui.Rect? _srcRect;
   ui.Size? _atlasSize;
   ui.Size? _localSize;
+  EdgeInsets? _currentPadding;
 
   ShaderOutlineDecorator({
     required this.shader,
     this.color = const ui.Color.fromARGB(255, 253, 6, 138),
     this.thickness = 1.0,
+    this.margin = 10.0,
     this.useGlitch = false,
     this.includeBase = true,
   });
+
+  @override
+  EdgeInsets get padding => EdgeInsets.all(margin);
 
   /// If true, the base sprite will be drawn after the outline.
   /// Set to false when layering multiple decorators to avoid duplicates.
@@ -44,6 +54,7 @@ class ShaderOutlineDecorator extends Decorator implements AtlasDecorator {
     _srcRect = context.srcRect;
     _atlasSize = context.atlasSize;
     _localSize = context.localSize;
+    _currentPadding = context.padding;
 
     // Use normalized time (0.0 to 1.0) based on frame index to ensure perfect looping
     final index = context.itemIndex ?? 0;
@@ -55,6 +66,7 @@ class ShaderOutlineDecorator extends Decorator implements AtlasDecorator {
   static Future<ShaderOutlineDecorator> load({
     ui.Color color = const ui.Color.fromARGB(255, 253, 6, 138),
     double thickness = 1.0,
+    double margin = 10.0,
     bool useGlitch = false,
   }) async {
     final program = await ui.FragmentProgram.fromAsset(
@@ -64,6 +76,7 @@ class ShaderOutlineDecorator extends Decorator implements AtlasDecorator {
       shader: program.fragmentShader(),
       color: color,
       thickness: thickness,
+      margin: margin,
       useGlitch: useGlitch,
     );
   }
@@ -77,8 +90,7 @@ class ShaderOutlineDecorator extends Decorator implements AtlasDecorator {
     }
 
     final localSize = _localSize ?? const ui.Size(0, 0);
-    // Standard margin used in CompositeAtlasImpl.analyze()
-    const double margin = 10.0;
+    final p = _currentPadding ?? EdgeInsets.all(margin);
 
     // 1. Set Uniforms
     // uSize (location 0)
@@ -96,8 +108,8 @@ class ShaderOutlineDecorator extends Decorator implements AtlasDecorator {
     shader.setFloat(7, _atlasSize!.height);
 
     // uOffset (location 3)
-    shader.setFloat(8, margin);
-    shader.setFloat(9, margin);
+    shader.setFloat(8, p.left);
+    shader.setFloat(9, p.top);
 
     // uTime (location 4)
     shader.setFloat(10, _time);
@@ -123,8 +135,8 @@ class ShaderOutlineDecorator extends Decorator implements AtlasDecorator {
     final drawRect = ui.Rect.fromLTWH(
       0,
       0,
-      _srcRect!.width + margin * 2,
-      _srcRect!.height + margin * 2,
+      _srcRect!.width + p.horizontal,
+      _srcRect!.height + p.vertical,
     );
     canvas.drawRect(drawRect, paint);
 
