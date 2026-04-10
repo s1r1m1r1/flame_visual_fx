@@ -207,7 +207,7 @@ class Ptero<T extends FlameGame> extends SpriteAnimationComponent
     final diss = dec.find<DissolveDecorator>();
     if (diss != null) {
       diss.progress = (gameTime * 0.5) % 1.2;
-      diss.mask.customNoise ??= List.generate(
+      diss.mask?.customNoise ??= List.generate(
         25 * 25,
         (_) => _random.nextDouble(),
       );

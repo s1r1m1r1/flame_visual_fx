@@ -19,11 +19,14 @@ float rand(vec2 co) {
 }
 
 void main() {
+    // 1. Convert Screen Coordinates to Atlas UV
+    // The matrix 'm' (uWorldToUV) now maps directly from FragmentCoord to AtlasUV.
+    // This is mathematically "point-wise" accurate across all camera/world transforms.
     mat4 m = mat4(uWorldToUV[0], uWorldToUV[1], uWorldToUV[2], uWorldToUV[3]);
-    vec4 localPos = m * vec4(FlutterFragCoord().xy, 0.0, 1.0);
-    // Perspective divide: mat4 translate sets w=1, but be safe.
-    vec2 uv = localPos.xy / localPos.w;
+    vec4 atlasPos = m * vec4(FlutterFragCoord().xy, 0.0, 1.0);
+    vec2 uv = atlasPos.xy / atlasPos.w;
     
+    // Safety check for sprite bounds
     if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) {
         fragColor = vec4(0.0);
         return;

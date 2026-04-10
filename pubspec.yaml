@@ -33,3 +33,4 @@ flutter:
     - lib/src/shaders/outline.frag
     - lib/src/shaders/dissolve.frag
     - lib/src/shaders/pixel_dissolve.frag
+    - lib/src/shaders/dissolve_debug.frag

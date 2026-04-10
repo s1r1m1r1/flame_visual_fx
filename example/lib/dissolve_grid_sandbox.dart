@@ -1,4 +1,3 @@
-import 'dart:math' as math;
 import 'dart:ui' as ui;
 import 'package:flame/game.dart';
 import 'package:flame/components.dart';
@@ -22,12 +21,13 @@ class DissolveGridSandbox extends StatefulWidget {
 
 class _DissolveGridSandboxState extends State<DissolveGridSandbox> {
   double threshold = 0.5;
-  double noiseWeight = 0.3;
+  double noiseWeight = 0.10;
   double gridSize = 15.0;
   int typeIndex = 1; // Default to TopDown
   bool showDebug = true;
-  double calibrateX = 0;
-  double calibrateY = 0;
+  double calibrateX = 0.0;
+  double calibrateY = 0.0;
+  double dprScale = 1.0;
 
   late DissolveGridGame game;
 
@@ -42,6 +42,7 @@ class _DissolveGridSandboxState extends State<DissolveGridSandbox> {
       showDebug: showDebug,
       calibrateX: calibrateX,
       calibrateY: calibrateY,
+      dprScale: dprScale,
     );
   }
 
@@ -54,6 +55,7 @@ class _DissolveGridSandboxState extends State<DissolveGridSandbox> {
       showDebug: showDebug,
       calibrateX: calibrateX,
       calibrateY: calibrateY,
+      dprScale: dprScale,
     );
   }
 
@@ -91,12 +93,16 @@ class _DissolveGridSandboxState extends State<DissolveGridSandbox> {
                     setState(() => gridSize = v);
                     _updateGame();
                   }),
-                  _buildSlider('Calibrate X', calibrateX, -500, 500, (v) {
+                  _buildSlider('Calibrate X', calibrateX, -2500, 2500, (v) {
                     setState(() => calibrateX = v);
                     _updateGame();
                   }),
-                  _buildSlider('Calibrate Y', calibrateY, -500, 500, (v) {
+                  _buildSlider('Calibrate Y', calibrateY, -2500, 2500, (v) {
                     setState(() => calibrateY = v);
+                    _updateGame();
+                  }),
+                  _buildSlider('DPR Scale', dprScale, 0.5, 4.0, (v) {
+                    setState(() => dprScale = v);
                     _updateGame();
                   }),
                   Row(
@@ -187,9 +193,10 @@ class DissolveGridGame extends FlameGame with PanDetector {
   bool showDebug;
   double calibrateX;
   double calibrateY;
+  double dprScale;
 
   late Ptero ptero, ptero2;
-  ShaderDissolveDecorator? decorator;
+  ShaderDissolveDebugDecorator? decorator;
 
   DissolveGridGame({
     required this.threshold,
@@ -199,6 +206,7 @@ class DissolveGridGame extends FlameGame with PanDetector {
     required this.showDebug,
     required this.calibrateX,
     required this.calibrateY,
+    required this.dprScale,
   });
 
   @override
@@ -222,27 +230,27 @@ class DissolveGridGame extends FlameGame with PanDetector {
     await world.add(ptero2);
 
     final program = await ui.FragmentProgram.fromAsset(
-      'assets/shaders/dissolve_grid.frag',
+      'packages/flame_visual_fx/lib/src/shaders/dissolve_debug.frag',
     );
 
-    decorator = ShaderDissolveDecorator(
+    // final pretoCameraPos = camera.globalToLocal(ptero.position);
+
+    decorator = ShaderDissolveDebugDecorator(
       shader: program.fragmentShader(),
       component: ptero,
+      // image and sourceRect are captured initially, but the decorator
+      // will automatically fetch the current frame from the animation ticker.
       image: ptero.animationTicker!.getSprite().image,
       sourceRect: ptero.animationTicker!.getSprite().src,
       progress: threshold,
       noiseWeight: noiseWeight,
       type: DissolveType.values[typeIndex],
       autoAnimate: true,
-      calibrationOffset: Vector2(calibrateX, calibrateY),
-      onApply: (s, p, t) {
-        // Matrix(0..15), Size(16,17), progress(18), type(19), noise(20), time(21)
-        s.setFloat(22, gridSize);
-      },
     );
     ptero.decorator.addLast(decorator!);
+
     ptero2.decorator.addLast(
-      ShaderDissolveDecorator(
+      ShaderDissolveDebugDecorator(
         shader: program.fragmentShader(),
         component: ptero2,
         image: ptero2.animationTicker!.getSprite().image,
@@ -251,8 +259,6 @@ class DissolveGridGame extends FlameGame with PanDetector {
         noiseWeight: noiseWeight,
         type: DissolveType.values[typeIndex],
         autoAnimate: true,
-        calibrationOffset: Vector2(calibrateX, calibrateY),
-        onApply: (s, p, t) => s.setFloat(22, gridSize),
       ),
     );
 
@@ -268,6 +274,7 @@ class DissolveGridGame extends FlameGame with PanDetector {
     required bool showDebug,
     required double calibrateX,
     required double calibrateY,
+    required double dprScale,
   }) {
     this.threshold = threshold;
     this.noiseWeight = noiseWeight;
@@ -276,16 +283,14 @@ class DissolveGridGame extends FlameGame with PanDetector {
     this.showDebug = showDebug;
     this.calibrateX = calibrateX;
     this.calibrateY = calibrateY;
+    this.dprScale = dprScale;
 
     void sync(Ptero p) {
-      final d = p.decorator.find<ShaderDissolveDecorator>();
+      final d = p.decorator.find<ShaderDissolveDebugDecorator>();
       if (d != null) {
         d.progress = threshold;
         d.noiseWeight = noiseWeight;
         d.type = DissolveType.values[typeIndex];
-        d.calibrationOffset = Vector2(calibrateX, calibrateY);
-        // Matrix(0..15), Size(16,17), progress(18), type(19), noise(20), time(21), gridSize(22)
-        d.onApply = (s, p, t) => s.setFloat(22, gridSize);
       }
       p.debugMode = showDebug;
     }
